@@ -215,6 +215,7 @@ data/batch_sim_solo/
 # Runtime/editor local artifacts
 *.pid
 imgui.ini
+.claude/settings.local.json
 
 # Local scratch files accidentally created in repo root
 0
