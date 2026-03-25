@@ -212,12 +212,6 @@ data/test/
 data/batch_optimize_interaction/
 data/batch_sim_solo/
 
-# Local iterative prep experiments
-prepare2/
-prepare3/
-prepare4/
-prepare5/
-
 # Runtime/editor local artifacts
 *.pid
 imgui.ini

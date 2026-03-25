@@ -1,0 +1,13 @@
+# Nohup Command Guide
+
+1. Create logs directory:
+mkdir -p logs
+
+2. Execute command:
+nohup conda run -n mimickit --no-capture-output python prepare4/run_paired_analysis.py --batch --source generated --n-clips 200 > logs/paired_generated_200.log 2>&1 & echo $! > logs/paired_generated_200.pid
+
+3. Monitor output:
+tail -f logs/paired_generated_200.log
+
+4. Terminate process:
+kill $(cat logs/paired_generated_200.pid)
