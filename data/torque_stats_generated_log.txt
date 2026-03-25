@@ -1,0 +1,348 @@
+nohup: ignoring input
+Found 1098 generated clips in data/generated/interhuman
+Sampled 200 clips (seed=42)
+[1/200] clip=1006  elapsed=0.0m  ETA=3.3m
+Warp 1.12.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 3090" (24 GiB, sm_86, mempool enabled)
+     "cuda:1"   : "NVIDIA GeForce RTX 3090" (24 GiB, sm_86, mempool enabled)
+   CUDA peer access:
+     Not supported
+   Kernel cache:
+     /home/rh/.cache/warp/1.12.0
+Module validate_and_correct_inertia_kernel_8fd4dd1e 8fd4dd1 load on device 'cuda:0' took 0.68 ms  (cached)
+Module newton._src.sim.ik.ik_solver 6670029 load on device 'cuda:0' took 1.03 ms  (cached)
+Module newton._src.sim.ik.ik_common bc7903e load on device 'cuda:0' took 2.06 ms  (cached)
+Module newton._src.sim.ik.ik_objectives efb687b load on device 'cuda:0' took 1.14 ms  (cached)
+Module newton._src.sim.ik.ik_lm_optimizer bdde777 load on device 'cuda:0' took 0.88 ms  (cached)
+Module _lm_solve_tiled_75_66_a7df87af c73f139 load on device 'cuda:0' took 139.57 ms  (cached)
+Module newton._src.sim.articulation 34633b8 load on device 'cuda:0' took 4.99 ms  (cached)
+Module newton._src.sim.graph_coloring 638e06c load on device 'cpu' took 1.02 ms  (cached)
+Module newton._src.solvers.mujoco.kernels 9553278 load on device 'cuda:0' took 10.42 ms  (cached)
+Module mujoco_warp._src.io 5612897 load on device 'cuda:0' took 2.20 ms  (cached)
+Module mujoco_warp._src.smooth 493b239 load on device 'cuda:0' took 3.26 ms  (cached)
+Module newton._src.sim.collide d52c8d0 load on device 'cuda:0' took 0.73 ms  (cached)
+Module newton._src.geometry.broad_phase_nxn dcff895 load on device 'cuda:0' took 0.49 ms  (cached)
+Module create_narrow_phase_primitive_kernel__locals__narrow_phase_primitive_kernel_f4753415 03c4ce8 load on device 'cuda:0' took 0.64 ms  (cached)
+Module create_narrow_phase_kernel_gjk_mpr__locals__narrow_phase_kernel_gjk_mpr_c06dcb66 f48d55b load on device 'cuda:0' took 2.14 ms  (cached)
+Module newton._src.geometry.narrow_phase 29b694c load on device 'cuda:0' took 0.76 ms  (cached)
+Module mujoco_warp._src.collision_driver 4d8b905 load on device 'cuda:0' took 0.32 ms  (cached)
+Module _nxn_broadphase__locals__kernel_ad5e5280 ad5e528 load on device 'cuda:0' took 0.34 ms  (cached)
+Module ccd_kernel_builder__locals__ccd_kernel_f0ad418a f0ad418 load on device 'cuda:0' took 1.85 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_fa5aed97 fa5aed9 load on device 'cuda:0' took 0.74 ms  (cached)
+Module mujoco_warp._src.constraint bbe4f30 load on device 'cuda:0' took 2.14 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_e0ce3ddd bc9aed7 load on device 'cuda:0' took 0.38 ms  (cached)
+Module mujoco_warp._src.passive 7fb8524 load on device 'cuda:0' took 0.70 ms  (cached)
+Module mujoco_warp._src.forward 291f859 load on device 'cuda:0' took 0.89 ms  (cached)
+Module mujoco_warp._src.support 343d1ae load on device 'cuda:0' took 0.36 ms  (cached)
+Module mujoco_warp._src.solver c8aea8f load on device 'cuda:0' took 1.41 ms  (cached)
+Module solve_init_jaref__locals__kernel_9a563fef 9a563fe load on device 'cuda:0' took 0.33 ms  (cached)
+Module mul_m_sparse__locals___mul_m_sparse_dad9b434 dad9b43 load on device 'cuda:0' took 0.37 ms  (cached)
+Module update_constraint_efc__locals__kernel_c108a880 c108a88 load on device 'cuda:0' took 0.35 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_03129e5c 03129e5 load on device 'cuda:0' took 0.34 ms  (cached)
+Module update_gradient_JTDAJ_sparse_tiled__locals__kernel_21b75cb5 2a4c2ae load on device 'cuda:0' took 49.50 ms  (cached)
+Module update_gradient_cholesky_blocked__locals__kernel_24528e03 35eb900 load on device 'cuda:0' took 192.77 ms  (cached)
+Module linesearch_jv_fused__locals__kernel_d7685f1c d7685f1 load on device 'cuda:0' took 0.42 ms  (cached)
+Module linesearch_iterative__locals__kernel_c515a119 aa5d65b load on device 'cuda:0' took 0.55 ms  (cached)
+Module update_constraint_efc__locals__kernel_9bc2b18b 9bc2b18 load on device 'cuda:0' took 0.36 ms  (cached)
+Module mujoco_warp._src.derivative f391b97 load on device 'cuda:0' took 0.45 ms  (cached)
+[2/200] clip=1022  elapsed=1.6m  ETA=161.8m
+[3/200] clip=1080  elapsed=2.9m  ETA=193.7m
+[4/200] clip=1105  elapsed=3.5m  ETA=173.4m
+[5/200] clip=1106  elapsed=4.1m  ETA=158.4m
+[6/200] clip=1129  elapsed=4.6m  ETA=148.3m
+[7/200] clip=1147  elapsed=6.1m  ETA=168.7m
+[8/200] clip=1163  elapsed=7.5m  ETA=180.8m
+[9/200] clip=1167  elapsed=11.8m  ETA=250.5m
+[10/200] clip=1187  elapsed=12.7m  ETA=240.7m
+[11/200] clip=1197  elapsed=14.9m  ETA=256.5m
+[12/200] clip=121  elapsed=19.2m  ETA=300.5m
+[13/200] clip=1273  elapsed=19.5m  ETA=281.0m
+[14/200] clip=1286  elapsed=23.8m  ETA=310.0m
+[15/200] clip=13  elapsed=25.7m  ETA=308.3m
+[16/200] clip=1302  elapsed=27.3m  ETA=306.7m
+[17/200] clip=1366  elapsed=32.2m  ETA=305.0m
+[18/200] clip=140  elapsed=36.8m  ETA=303.3m
+[19/200] clip=142  elapsed=39.2m  ETA=301.7m
+[20/200] clip=1441  elapsed=39.8m  ETA=300.0m
+[21/200] clip=1535  elapsed=41.7m  ETA=298.3m
+[22/200] clip=1545  elapsed=46.2m  ETA=296.7m
+[23/200] clip=161  elapsed=48.9m  ETA=295.0m
+[24/200] clip=1880  elapsed=51.0m  ETA=293.3m
+[25/200] clip=1885  elapsed=55.6m  ETA=291.7m
+[26/200] clip=1985  elapsed=57.5m  ETA=290.0m
+[27/200] clip=1997  elapsed=58.9m  ETA=288.3m
+[28/200] clip=2054  elapsed=63.5m  ETA=286.7m
+[29/200] clip=2205  elapsed=68.1m  ETA=285.0m
+[30/200] clip=2232  elapsed=69.3m  ETA=283.3m
+[31/200] clip=2259  elapsed=71.8m  ETA=281.7m
+[32/200] clip=2508  elapsed=76.4m  ETA=280.0m
+[33/200] clip=2512  elapsed=77.9m  ETA=278.3m
+[34/200] clip=256  elapsed=78.6m  ETA=276.7m
+[35/200] clip=2575  elapsed=79.1m  ETA=275.0m
+[36/200] clip=2600  elapsed=83.4m  ETA=273.3m
+[37/200] clip=2652  elapsed=85.3m  ETA=271.7m
+[38/200] clip=2721  elapsed=86.8m  ETA=270.0m
+[39/200] clip=2722  elapsed=87.4m  ETA=268.3m
+[40/200] clip=2741  elapsed=91.0m  ETA=266.7m
+[41/200] clip=2747  elapsed=92.7m  ETA=265.0m
+[42/200] clip=2748  elapsed=94.2m  ETA=263.3m
+[43/200] clip=2766  elapsed=95.0m  ETA=261.7m
+[44/200] clip=2775  elapsed=97.7m  ETA=260.0m
+[45/200] clip=2807  elapsed=98.2m  ETA=258.3m
+[46/200] clip=2827  elapsed=100.2m  ETA=256.7m
+[47/200] clip=2838  elapsed=101.7m  ETA=255.0m
+[48/200] clip=2843  elapsed=102.2m  ETA=253.3m
+[49/200] clip=2850  elapsed=103.1m  ETA=251.7m
+[50/200] clip=2981  elapsed=106.1m  ETA=250.0m
+[51/200] clip=3054  elapsed=107.5m  ETA=248.3m
+[52/200] clip=3067  elapsed=110.9m  ETA=246.7m
+[53/200] clip=3074  elapsed=112.7m  ETA=245.0m
+[54/200] clip=308  elapsed=113.7m  ETA=243.3m
+[55/200] clip=3216  elapsed=114.5m  ETA=241.7m
+[56/200] clip=3223  elapsed=114.8m  ETA=240.0m
+[57/200] clip=3237  elapsed=115.3m  ETA=238.3m
+[58/200] clip=3244  elapsed=115.7m  ETA=236.7m
+[59/200] clip=3323  elapsed=116.0m  ETA=235.0m
+[60/200] clip=3328  elapsed=117.3m  ETA=233.3m
+[61/200] clip=3360  elapsed=119.8m  ETA=231.7m
+[62/200] clip=3361  elapsed=122.6m  ETA=230.0m
+[63/200] clip=3377  elapsed=123.1m  ETA=228.3m
+[64/200] clip=3399  elapsed=125.3m  ETA=226.7m
+[65/200] clip=340  elapsed=128.5m  ETA=225.0m
+[66/200] clip=3420  elapsed=128.9m  ETA=223.3m
+[67/200] clip=3421  elapsed=130.1m  ETA=221.7m
+[68/200] clip=3422  elapsed=130.5m  ETA=220.0m
+[69/200] clip=3441  elapsed=132.5m  ETA=218.3m
+[70/200] clip=3450  elapsed=134.4m  ETA=216.7m
+[71/200] clip=3473  elapsed=135.8m  ETA=215.0m
+[72/200] clip=3476  elapsed=137.6m  ETA=213.3m
+[73/200] clip=3485  elapsed=138.3m  ETA=211.7m
+[74/200] clip=3498  elapsed=138.8m  ETA=210.0m
+[75/200] clip=3540  elapsed=139.8m  ETA=208.3m
+[76/200] clip=3585  elapsed=140.8m  ETA=206.7m
+[77/200] clip=367  elapsed=143.6m  ETA=205.0m
+[78/200] clip=3676  elapsed=144.7m  ETA=203.3m
+[79/200] clip=3684  elapsed=149.1m  ETA=201.7m
+[80/200] clip=3699  elapsed=149.9m  ETA=200.0m
+[81/200] clip=3713  elapsed=150.3m  ETA=198.3m
+[82/200] clip=3747  elapsed=150.8m  ETA=196.7m
+[83/200] clip=390  elapsed=151.3m  ETA=195.0m
+[84/200] clip=3909  elapsed=151.9m  ETA=193.3m
+[85/200] clip=3919  elapsed=153.5m  ETA=191.7m
+[86/200] clip=3928  elapsed=154.1m  ETA=190.0m
+[87/200] clip=3934  elapsed=155.9m  ETA=188.3m
+[88/200] clip=3947  elapsed=156.4m  ETA=186.7m
+[89/200] clip=3955  elapsed=157.0m  ETA=185.0m
+[90/200] clip=3958  elapsed=161.3m  ETA=183.3m
+[91/200] clip=3977  elapsed=162.9m  ETA=181.7m
+[92/200] clip=3978  elapsed=163.7m  ETA=180.0m
+[93/200] clip=3999  elapsed=165.1m  ETA=178.3m
+[94/200] clip=4  elapsed=166.5m  ETA=176.7m
+[95/200] clip=4033  elapsed=167.7m  ETA=175.0m
+[96/200] clip=4056  elapsed=168.6m  ETA=173.3m
+[97/200] clip=4067  elapsed=171.2m  ETA=171.7m
+[98/200] clip=410  elapsed=171.8m  ETA=170.0m
+[99/200] clip=4135  elapsed=172.5m  ETA=168.3m
+[100/200] clip=4136  elapsed=173.2m  ETA=166.7m
+[101/200] clip=4140  elapsed=174.3m  ETA=165.0m
+[102/200] clip=4154  elapsed=176.7m  ETA=163.3m
+[103/200] clip=416  elapsed=179.1m  ETA=161.7m
+[104/200] clip=4161  elapsed=180.0m  ETA=160.0m
+[105/200] clip=4176  elapsed=181.3m  ETA=158.3m
+[106/200] clip=4200  elapsed=182.0m  ETA=156.7m
+[107/200] clip=4235  elapsed=182.7m  ETA=155.0m
+[108/200] clip=4251  elapsed=183.2m  ETA=153.3m
+[109/200] clip=4262  elapsed=183.9m  ETA=151.7m
+[110/200] clip=4321  elapsed=187.3m  ETA=150.0m
+[111/200] clip=4324  elapsed=188.6m  ETA=148.3m
+[112/200] clip=4326  elapsed=189.0m  ETA=146.7m
+[113/200] clip=4354  elapsed=189.6m  ETA=145.0m
+[114/200] clip=4390  elapsed=190.8m  ETA=143.3m
+[115/200] clip=4391  elapsed=191.7m  ETA=141.7m
+[116/200] clip=4393  elapsed=195.2m  ETA=140.0m
+[117/200] clip=4403  elapsed=195.7m  ETA=138.3m
+[118/200] clip=4421  elapsed=199.2m  ETA=136.7m
+[119/200] clip=4427  elapsed=199.7m  ETA=135.0m
+[120/200] clip=4435  elapsed=200.0m  ETA=133.3m
+[121/200] clip=4438  elapsed=203.0m  ETA=131.7m
+[122/200] clip=4484  elapsed=204.1m  ETA=130.0m
+[123/200] clip=4537  elapsed=205.0m  ETA=128.3m
+[124/200] clip=4588  elapsed=205.6m  ETA=126.0m
+[125/200] clip=4593  elapsed=206.7m  ETA=124.0m
+[126/200] clip=4665  elapsed=207.7m  ETA=122.0m
+[127/200] clip=4670  elapsed=210.8m  ETA=121.2m
+[128/200] clip=4691  elapsed=213.4m  ETA=120.0m
+[129/200] clip=4700  elapsed=214.8m  ETA=118.2m
+[130/200] clip=4764  elapsed=217.8m  ETA=116.7m
+[131/200] clip=4771  elapsed=219.2m  ETA=115.0m
+[132/200] clip=4776  elapsed=219.9m  ETA=113.3m
+[133/200] clip=4784  elapsed=224.2m  ETA=111.7m
+[134/200] clip=4808  elapsed=224.8m  ETA=110.0m
+[135/200] clip=4823  elapsed=225.1m  ETA=108.3m
+[136/200] clip=4830  elapsed=226.1m  ETA=106.4m
+[137/200] clip=4845  elapsed=226.9m  ETA=104.3m
+[138/200] clip=4860  elapsed=230.8m  ETA=103.3m
+[139/200] clip=4903  elapsed=231.9m  ETA=101.7m
+[140/200] clip=4909  elapsed=233.5m  ETA=100.0m
+[141/200] clip=4920  elapsed=234.8m  ETA=98.3m
+[142/200] clip=4924  elapsed=236.0m  ETA=96.4m
+[143/200] clip=4936  elapsed=236.7m  ETA=94.3m
+[144/200] clip=4948  elapsed=237.9m  ETA=92.5m
+[145/200] clip=4981  elapsed=240.0m  ETA=91.0m
+[146/200] clip=4997  elapsed=242.4m  ETA=89.7m
+[147/200] clip=50  elapsed=244.2m  ETA=88.0m
+[148/200] clip=501  elapsed=244.6m  ETA=85.9m
+[149/200] clip=5019  elapsed=245.0m  ETA=83.9m
+[150/200] clip=5059  elapsed=247.6m  ETA=82.5m
+[151/200] clip=5071  elapsed=248.3m  ETA=80.6m
+[152/200] clip=5078  elapsed=248.8m  ETA=78.6m
+[153/200] clip=5081  elapsed=249.7m  ETA=76.7m
+[154/200] clip=5121  elapsed=253.9m  ETA=75.9m
+[155/200] clip=5128  elapsed=255.1m  ETA=74.1m
+[156/200] clip=5129  elapsed=256.0m  ETA=72.2m
+[157/200] clip=524  elapsed=256.5m  ETA=70.3m
+[158/200] clip=5474  elapsed=257.6m  ETA=68.5m
+[159/200] clip=5533  elapsed=257.9m  ETA=66.5m
+[160/200] clip=558  elapsed=258.2m  ETA=64.6m
+[161/200] clip=5582  elapsed=261.0m  ETA=63.2m
+[162/200] clip=5585  elapsed=261.8m  ETA=61.4m
+[163/200] clip=565  elapsed=262.4m  ETA=59.6m
+[164/200] clip=571  elapsed=263.2m  ETA=57.8m
+[165/200] clip=5745  elapsed=265.6m  ETA=56.3m
+[166/200] clip=5766  elapsed=266.1m  ETA=54.5m
+[167/200] clip=5792  elapsed=266.5m  ETA=52.7m
+[168/200] clip=5799  elapsed=267.4m  ETA=50.9m
+[169/200] clip=62  elapsed=268.3m  ETA=49.2m
+[170/200] clip=6251  elapsed=268.8m  ETA=47.4m
+[171/200] clip=6254  elapsed=273.0m  ETA=46.3m
+[172/200] clip=6278  elapsed=273.4m  ETA=44.5m
+[173/200] clip=6300  elapsed=274.1m  ETA=42.8m
+[174/200] clip=6324  elapsed=274.5m  ETA=41.0m
+[175/200] clip=636  elapsed=275.0m  ETA=39.3m
+[176/200] clip=6361  elapsed=275.7m  ETA=37.6m
+[177/200] clip=6367  elapsed=276.6m  ETA=35.9m
+[178/200] clip=6377  elapsed=277.4m  ETA=34.3m
+[179/200] clip=6392  elapsed=277.9m  ETA=32.6m
+[180/200] clip=6398  elapsed=279.1m  ETA=31.0m
+[181/200] clip=6407  elapsed=280.0m  ETA=29.4m
+[182/200] clip=6431  elapsed=281.5m  ETA=27.8m
+[183/200] clip=6437  elapsed=282.0m  ETA=26.2m
+[184/200] clip=6541  elapsed=282.8m  ETA=24.6m
+[185/200] clip=6620  elapsed=283.3m  ETA=23.0m
+[186/200] clip=6644  elapsed=283.6m  ETA=21.3m
+[187/200] clip=6654  elapsed=284.0m  ETA=19.7m
+[188/200] clip=6669  elapsed=284.4m  ETA=18.2m
+[189/200] clip=684  elapsed=285.0m  ETA=16.6m
+[190/200] clip=724  elapsed=288.3m  ETA=15.2m
+[191/200] clip=7779  elapsed=288.9m  ETA=13.6m
+[192/200] clip=802  elapsed=291.2m  ETA=12.1m
+[193/200] clip=830  elapsed=292.5m  ETA=10.6m
+[194/200] clip=86  elapsed=294.3m  ETA=9.1m
+[195/200] clip=864  elapsed=296.6m  ETA=7.6m
+[196/200] clip=869  elapsed=298.7m  ETA=6.1m
+[197/200] clip=880  elapsed=299.4m  ETA=4.6m
+[198/200] clip=914  elapsed=300.4m  ETA=3.0m
+[199/200] clip=958  elapsed=301.3m  ETA=1.5m
+[200/200] clip=967  elapsed=303.3m  ETA=0.0m
+
+Done: 200 clips, 0 errors, 38960 total frames, 18310s elapsed
+
+Saved torques: (38960, 75) to data/torque_stats_generated/torque_distribution.npz
+
+================================================================================
+ TORQUE DISTRIBUTION — 38,960 frames
+================================================================================
+
+Group             |τ| mean    |τ| std    |τ| 95%    |τ| 99%    |τ| max  Unit
+--------------- ---------- ---------- ---------- ---------- ----------  ----
+Root trans          879.17    1805.75    2971.02    6961.59  116333.41  N
+Root rot           1458.96    4130.92    5720.13   14817.82  348839.06  Nm
+L_Leg                14.04      46.42      66.38     186.26    3304.30  Nm
+R_Leg                13.60      45.85      63.88     180.92    3554.73  Nm
+Spine/Torso          26.76      72.97     110.97     283.71   10270.98  Nm
+L_Arm                 4.93      13.42      21.00      52.42     912.83  Nm
+R_Arm                 5.58      14.93      24.25      59.07    1341.53  Nm
+
+ALL HINGES           12.91      44.56      57.21     169.27   10270.98  Nm
+
+────────────────────────────────────────────────────────────────────────────────
+ Per-DOF detail (hinges only):
+────────────────────────────────────────────────────────────────────────────────
+DOF                    mean      std  |τ| p50  |τ| p95  |τ| p99      max
+------------------ -------- -------- -------- -------- -------- --------
+L_Hip_x                0.58    93.25     2.60   105.61   267.94  1936.47
+L_Hip_y               -2.02    93.26    -0.25   107.96   271.91  2296.39
+L_Hip_z               -2.26    80.56    -0.74    83.18   210.50  3304.30
+L_Knee_x              -0.10    26.03     0.10    29.25    72.47  1329.15
+L_Knee_y               0.08    27.10    -0.01    30.99    76.09  1023.65
+L_Knee_z               0.71    23.30     0.06    25.81    70.10  1338.11
+L_Ankle_x             -0.10     1.49    -0.09     1.59     4.05    69.73
+L_Ankle_y             -0.08     1.38    -0.07     1.53     3.85    40.85
+L_Ankle_z             -0.03     2.21    -0.02     2.64     6.30    86.08
+L_Toe_x                0.02     0.46     0.03     0.56     1.34    14.82
+L_Toe_y                0.00     0.33    -0.00     0.37     0.89    14.93
+L_Toe_z               -0.02     0.43    -0.03     0.50     1.25    12.20
+R_Hip_x               -3.63    96.52    -4.15   105.96   277.72  2940.57
+R_Hip_y               -0.75    86.87    -0.94   110.19   275.73  1843.45
+R_Hip_z                0.29    79.65     0.73    79.53   205.79  3554.73
+R_Knee_x               0.39    26.45     0.15    32.31    78.74   813.67
+R_Knee_y               0.12    27.24    -0.05    34.32    82.35   689.81
+R_Knee_z              -0.14    23.61    -0.01    23.15    64.12  1059.60
+R_Ankle_x              0.06     1.51     0.10     1.68     4.17    68.84
+R_Ankle_y             -0.07     1.53    -0.10     1.57     4.33    66.23
+R_Ankle_z              0.04     2.26     0.05     2.78     6.44    59.05
+R_Toe_x               -0.02     0.41    -0.02     0.46     1.07    12.27
+R_Toe_y                0.00     0.33    -0.00     0.39     0.97    11.26
+R_Toe_z                0.02     0.38     0.02     0.48     1.15     7.80
+Torso_x               -0.25   130.73    -1.34   158.64   394.01  3849.25
+Torso_y              -10.49   158.25    -9.80   163.27   407.48 10270.98
+Torso_z               -0.49   109.87    -0.32   109.98   311.39  3668.40
+Spine_x               -0.35    71.97    -0.53    85.69   222.10  3331.21
+Spine_y                0.42    83.48    -0.14    92.67   228.43  4670.25
+Spine_z                1.18    60.01     0.26    66.34   181.43  2598.82
+Chest_x                0.53    54.45     0.66    62.73   155.91  1669.60
+Chest_y               -0.33    59.96     0.37    68.58   163.18  3979.72
+Chest_z               -0.94    48.06    -0.60    53.07   140.15  1178.52
+Neck_x                 0.47    17.23     0.49    19.18    48.90   672.71
+Neck_y                -2.66    18.98    -2.87    19.43    51.60   952.03
+Neck_z                -0.50    16.48    -0.25    17.22    44.39   595.60
+Head_x                -0.02     0.95    -0.00     0.92     2.83    17.89
+Head_y                -0.01     1.00     0.01     0.97     2.72    21.17
+Head_z                 0.01     0.94     0.02     1.01     2.58    18.78
+L_Thorax_x             4.17    20.78     4.19    27.61    59.01   636.84
+L_Thorax_y            -2.19    18.61    -2.12    18.99    51.27   455.88
+L_Thorax_z            -0.75    21.24    -0.66    19.89    53.01   912.83
+L_Shoulder_x           0.22    21.33     0.01    23.82    61.51   658.06
+L_Shoulder_y          -1.86    20.29    -1.60    20.56    55.27   911.63
+L_Shoulder_z          -1.46    19.83    -0.74    20.91    53.76   714.71
+L_Elbow_x              0.11     7.83     0.16     9.31    22.04   298.77
+L_Elbow_y             -0.25     8.34    -0.22     9.45    23.20   439.98
+L_Elbow_z             -0.01     7.23    -0.05     8.24    20.98   224.11
+L_Wrist_x             -0.02     0.97    -0.03     1.15     2.99    22.45
+L_Wrist_y             -0.00     0.20    -0.00     0.24     0.61     3.64
+L_Wrist_z              0.03     1.01     0.03     1.29     2.97    43.48
+L_Hand_x              -0.00     0.01    -0.00     0.01     0.02     0.13
+L_Hand_y              -0.00     0.01     0.00     0.01     0.02     0.16
+L_Hand_z               0.00     0.01     0.00     0.01     0.02     0.14
+R_Thorax_x            -7.26    22.90    -6.13    18.88    56.73   553.25
+R_Thorax_y            -1.25    21.72    -1.29    22.30    60.20   692.99
+R_Thorax_z             0.73    22.14     0.75    25.83    60.74  1341.53
+R_Shoulder_x           0.16    22.58    -0.37    26.61    68.58   673.92
+R_Shoulder_y          -1.91    22.33    -1.74    25.37    64.29   891.08
+R_Shoulder_z           0.91    24.44     0.50    28.91    67.16   799.83
+R_Elbow_x             -0.10     8.36    -0.19    10.18    23.93   257.32
+R_Elbow_y             -0.43     7.82    -0.26     9.04    21.39   424.69
+R_Elbow_z             -0.05     7.94    -0.00     9.21    23.88   203.90
+R_Wrist_x              0.02     1.02     0.01     1.34     3.04    22.78
+R_Wrist_y             -0.00     0.14    -0.00     0.17     0.41     5.59
+R_Wrist_z              0.01     1.07     0.01     1.39     3.15    45.81
+R_Hand_x               0.00     0.01     0.00     0.01     0.02     0.14
+R_Hand_y               0.00     0.01     0.00     0.01     0.02     0.12
+R_Hand_z               0.00     0.01     0.00     0.01     0.02     0.13
+
+Plots saved to data/torque_stats_generated/
+
+All results saved to: data/torque_stats_generated/

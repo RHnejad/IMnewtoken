@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /media/rh/codes/sim/InterMask/prepare -type f -name *.py)",
+      "Bash(wc -l /media/rh/codes/sim/InterMask/prepare4/*.py)",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:developer.nvidia.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:hcsi.cs.tsinghua.edu.cn)",
+      "WebFetch(domain:pressbooks.bccampus.ca)",
+      "WebFetch(domain:bmcsportsscimedrehabil.biomedcentral.com)",
+      "WebFetch(domain:www.biorxiv.org)",
+      "WebFetch(domain:link.springer.com)",
+      "WebFetch(domain:apps.dtic.mil)",
+      "WebFetch(domain:dl.acm.org)",
+      "WebFetch(domain:now.aapmr.org)",
+      "WebFetch(domain:www.frontiersin.org)",
+      "Bash(conda run:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(grep -r control_freq_inv /media/rh/codes/sim/InterMask/prepare5/PHC/phc/env/util/*.py)",
+      "Bash(grep -r \"control_freq_inv\\\\|dt.*1/60\\\\|dt.*0.016\\\\|sim_substeps\\\\|substeps\" /media/rh/codes/sim/InterMask/prepare5/PHC/phc/ --include=*.yaml --include=*.yml --include=*.py)",
+      "Read(//media/rh/codes/sim/InterMask/**)",
+      "Bash(kill 730882)"
+    ]
+  }
+}
