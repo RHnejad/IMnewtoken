@@ -1,0 +1,29 @@
+services:
+  phc:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: imnewtoken-phc:latest
+    container_name: phc
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+      - DISPLAY=${DISPLAY:-:0}
+      - XAUTHORITY=/tmp/.docker.xauth
+      - HOME=/workspace/home
+    volumes:
+      - ${REPO_PATH:-/var/tmp/imnewtoken-docker}:/workspace/repo
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+    working_dir: /workspace/repo
+    stdin_open: true
+    tty: true
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, graphics, utility, compute]

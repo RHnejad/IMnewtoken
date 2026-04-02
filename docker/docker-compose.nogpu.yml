@@ -1,0 +1,20 @@
+services:
+  phc:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: imnewtoken-phc:latest
+    container_name: phc
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - XAUTHORITY=/tmp/.docker.xauth
+      - HOME=/workspace/home
+    volumes:
+      - ${REPO_PATH:-/var/tmp/imnewtoken-docker}:/workspace/repo
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+    working_dir: /workspace/repo
+    stdin_open: true
+    tty: true
+    network_mode: host
