@@ -117,5 +117,63 @@ wait $PID7
 wait $PID8
 echo "GT Skyhook metrics COMPLETE ✅"
 
+# --- PHASE 3: ImDy Metrics (optional) ---
+if [ "${IMDY_ENABLE:-0}" = "1" ]; then
+    echo ""
+    echo "==========================================="
+    echo " PHASE 3: Computing ImDy Metrics"
+    echo "==========================================="
+
+    IMDY_PYTHON="${IMDY_PYTHON:-python}"
+    IMDY_CONFIG="${IMDY_CONFIG:-prepare5/ImDy/config/IDFD_mkr.yml}"
+    IMDY_CHECKPOINT="${IMDY_CHECKPOINT:-prepare5/ImDy/downloaded_checkpoint/imdy_pretrain.pt}"
+    IMDY_GEN_DIR="${IMDY_GEN_DIR:-data/retargeted_v2/generated_interhuman}"
+
+    # Some repos use data/retargeted_v2/gt_interhuman; this repo also has data/retargeted_v2/interhuman.
+    if [ -d "data/retargeted_v2/gt_interhuman" ]; then
+        IMDY_GT_DIR="${IMDY_GT_DIR:-data/retargeted_v2/gt_interhuman}"
+    else
+        IMDY_GT_DIR="${IMDY_GT_DIR:-data/retargeted_v2/interhuman}"
+    fi
+
+    echo "[cuda:0] Scoring generated InterHuman with ImDy..."
+    OMP_NUM_THREADS=1 $IMDY_PYTHON eval_pipeline/imdy_scorer.py \
+        --data-dir "$IMDY_GEN_DIR" \
+        --dataset-type retargeted \
+        --output-dir data/imdy_metrics/generated_interhuman \
+        --imdy-config "$IMDY_CONFIG" \
+        --imdy-checkpoint "$IMDY_CHECKPOINT" \
+        --device cuda:0 \
+        > /tmp/eval_imdy_gen_interhuman.log 2>&1 &
+    PID9=$!
+
+    echo "[cuda:1] Scoring GT InterHuman with ImDy..."
+    OMP_NUM_THREADS=1 $IMDY_PYTHON eval_pipeline/imdy_scorer.py \
+        --data-dir "$IMDY_GT_DIR" \
+        --dataset-type retargeted \
+        --output-dir data/imdy_metrics/gt_interhuman \
+        --imdy-config "$IMDY_CONFIG" \
+        --imdy-checkpoint "$IMDY_CHECKPOINT" \
+        --device cuda:1 \
+        > /tmp/eval_imdy_gt_interhuman.log 2>&1 &
+    PID10=$!
+
+    echo "Waiting for ImDy scoring to finish..."
+    wait $PID9
+    wait $PID10
+    echo "ImDy scoring COMPLETE ✅"
+
+    echo "Comparing GT vs Generated ImDy distributions..."
+    OMP_NUM_THREADS=1 $IMDY_PYTHON eval_pipeline/imdy_scorer.py --compare \
+        --gt-dir data/imdy_metrics/gt_interhuman \
+        --gen-dir data/imdy_metrics/generated_interhuman \
+        --output data/imdy_metrics/comparison_report.json \
+        > /tmp/eval_imdy_compare.log 2>&1
+    echo "ImDy comparison COMPLETE ✅"
+else
+    echo ""
+    echo "PHASE 3 (ImDy) skipped. Set IMDY_ENABLE=1 to run it."
+fi
+
 echo ""
 echo "ALL EVALUATION PIPELINE PHYSICS STEPS COMPLETE 🎉"

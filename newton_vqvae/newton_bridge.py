@@ -47,7 +47,7 @@ from prepare2.pd_utils import (
     ROOT_POS_KP, ROOT_POS_KD, ROOT_ROT_KP, ROOT_ROT_KD,
     ARMATURE_HINGE, ARMATURE_ROOT,
 )
-from prepare2.gen_smpl_xml import R_ROT
+from prepare_utils.constants import R_ROT
 
 # Rotation matrix for SMPL-X → Newton coordinate conversion
 _R_ROT = torch.from_numpy(R_ROT.astype(np.float32))  # (3,3)

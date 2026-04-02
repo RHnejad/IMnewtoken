@@ -35,14 +35,9 @@ import newton
 import newton.ik as ik
 
 # ═══════════════════════════════════════════════════════════════
-# SMPL joint → Newton body index (verified via discover_ik.py)
+# Constants — imported from prepare_utils (single source of truth)
 # ═══════════════════════════════════════════════════════════════
-SMPL_TO_NEWTON = {
-    0: 0, 1: 1, 2: 5, 3: 9, 4: 2, 5: 6, 6: 10, 7: 3,
-    8: 7, 9: 11, 10: 4, 11: 8, 12: 12, 13: 14, 14: 19,
-    15: 13, 16: 15, 17: 20, 18: 16, 19: 21, 20: 17, 21: 22,
-}
-N_SMPL_JOINTS = 22
+from prepare_utils.constants import SMPL_TO_NEWTON, N_SMPL_JOINTS
 
 
 def build_model(device="cuda:0"):
@@ -117,7 +112,7 @@ def retarget_clip(model, ref_pos, ik_iters=50, device="cuda:0"):
     jq_init = np.zeros((T, n_coords), dtype=np.float32)
     for t in range(T):
         jq_init[t, 0:3] = ref_pos[t, 0]       # pelvis xyz
-        jq_init[t, 3:7] = [1.0, 0.0, 0.0, 0.0]  # identity quat
+        jq_init[t, 3:7] = [0.0, 0.0, 0.0, 1.0]  # identity quat (xyzw)
     jq = wp.array(jq_init, dtype=wp.float32, device=device)
 
     # ── Solve all frames at once ─────────────────────────────

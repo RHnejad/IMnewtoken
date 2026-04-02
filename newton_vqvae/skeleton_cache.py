@@ -21,10 +21,14 @@ if _PROJECT_ROOT not in sys.path:
 import warp as wp
 import newton
 
-from prepare2.gen_smpl_xml import generate_smpl_xml, get_smplx_body_offset, R_ROT
+from prepare_utils.constants import (
+    R_ROT, SMPL_TO_NEWTON, N_SMPL_JOINTS, N_JOINT_Q,
+    BODIES_PER_PERSON, DOFS_PER_PERSON, COORDS_PER_PERSON,
+)
+from prepare_utils.gen_xml import generate_xml, get_smplx_body_offset
+# Backward compat alias: old name → new name
+generate_smpl_xml = lambda betas, **kw: generate_xml(betas=betas, **kw)
 from prepare2.gen_smpl_with_sphere_feet_xml import get_or_create_sphere_feet_xml
-from prepare2.retarget import SMPL_TO_NEWTON, N_SMPL_JOINTS, N_JOINT_Q
-from newton_vqvae.config import BODIES_PER_PERSON, DOFS_PER_PERSON, COORDS_PER_PERSON
 
 
 # ═══════════════════════════════════════════════════════════════

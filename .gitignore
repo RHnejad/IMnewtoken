@@ -206,11 +206,26 @@ data/mimickit_motions/
 data/paired_eval_generated/
 data/paired_eval_gt/
 data/residual_wrench/
+data/residual_wrench_intergen/
+data/generated_intergen/
+data/imdy_metrics/
+data/torque_stats_generated_log.txt
 data/retargeted_v2/
 data/stats/
 data/test/
 data/batch_optimize_interaction/
 data/batch_sim_solo/
+data/body_model/smpl
+
+# Local iterative prep experiments
+prepare2/
+prepare3/
+prepare4/
+prepare5/
+
+# Local agent/runtime metadata
+.codex
+.claude/projects/
 
 # Runtime/editor local artifacts
 *.pid

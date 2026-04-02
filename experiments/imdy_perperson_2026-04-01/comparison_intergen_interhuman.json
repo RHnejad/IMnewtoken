@@ -1,0 +1,189 @@
+{
+  "distribution_comparison": {
+    "person1_contact_height_consistency": {
+      "gen_count": 1173,
+      "gen_mean": 0.14894405202931135,
+      "gt_count": 7801,
+      "gt_mean": 0.18463234386945823,
+      "ks_pvalue": 7.955217959917284e-08,
+      "ks_statistic": 0.09116117646403127,
+      "mean_delta_gen_minus_gt": -0.03568829184014688,
+      "wasserstein": 0.04741213087363357
+    },
+    "person1_contact_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.1622615774357722,
+      "gt_count": 7806,
+      "gt_mean": 0.16156043636201295,
+      "ks_pvalue": 1.1505549554379252e-05,
+      "ks_statistic": 0.07669685526183873,
+      "mean_delta_gen_minus_gt": 0.0007011410737592372,
+      "wasserstein": 0.001413343378083579
+    },
+    "person1_grf_negative_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.2056635730633796,
+      "gt_count": 7806,
+      "gt_mean": 0.21195491623245025,
+      "ks_pvalue": 1.1493827462751549e-12,
+      "ks_statistic": 0.11722637121553163,
+      "mean_delta_gen_minus_gt": -0.006291343169070651,
+      "wasserstein": 0.008107109137208952
+    },
+    "person1_mean_torque_bw": {
+      "gen_count": 1173,
+      "gen_mean": 0.25102106573940414,
+      "gt_count": 7806,
+      "gt_mean": 0.2591842444760451,
+      "ks_pvalue": 7.291654503018959e-81,
+      "ks_statistic": 0.29847916842772265,
+      "mean_delta_gen_minus_gt": -0.008163178736640964,
+      "wasserstein": 0.008164675846890035
+    },
+    "person1_mean_vertical_grf": {
+      "gen_count": 1173,
+      "gen_mean": 12.240226239167658,
+      "gt_count": 7806,
+      "gt_mean": 13.138909440310897,
+      "ks_pvalue": 1.575929606704908e-16,
+      "ks_statistic": 0.13442607267149081,
+      "mean_delta_gen_minus_gt": -0.8986832011432391,
+      "wasserstein": 1.0119961302972533
+    },
+    "person1_peak_vertical_grf": {
+      "gen_count": 1173,
+      "gen_mean": 93.32966400920479,
+      "gt_count": 7806,
+      "gt_mean": 99.03592858153854,
+      "ks_pvalue": 4.655275264624693e-18,
+      "ks_statistic": 0.1406498902739253,
+      "mean_delta_gen_minus_gt": -5.706264572333751,
+      "wasserstein": 6.425667332644943
+    },
+    "person1_torque_95th": {
+      "gen_count": 1173,
+      "gen_mean": 365.9657807475557,
+      "gt_count": 7806,
+      "gt_mean": 386.7242508338237,
+      "ks_pvalue": 1.3145238234763734e-137,
+      "ks_statistic": 0.3872825873991611,
+      "mean_delta_gen_minus_gt": -20.758470086268005,
+      "wasserstein": 20.761336862135124
+    },
+    "person1_torque_smoothness": {
+      "gen_count": 1173,
+      "gen_mean": 73.80740462932562,
+      "gt_count": 7801,
+      "gt_mean": 85.82856966966825,
+      "ks_pvalue": 1.6675903232247944e-68,
+      "ks_statistic": 0.2749788455870468,
+      "mean_delta_gen_minus_gt": -12.021165040342638,
+      "wasserstein": 12.5340631438272
+    },
+    "person1_torque_violation_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.0,
+      "gt_count": 7806,
+      "gt_mean": 0.0,
+      "ks_pvalue": 1.0,
+      "ks_statistic": 0.0,
+      "mean_delta_gen_minus_gt": 0.0,
+      "wasserstein": 0.0
+    },
+    "person2_contact_height_consistency": {
+      "gen_count": 1173,
+      "gen_mean": 0.1343429436700539,
+      "gt_count": 7801,
+      "gt_mean": 0.18537986086831731,
+      "ks_pvalue": 1.3481664242200025e-08,
+      "ks_statistic": 0.0957930175520156,
+      "mean_delta_gen_minus_gt": -0.05103691719826342,
+      "wasserstein": 0.057118135920154335
+    },
+    "person2_contact_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.16196884543731158,
+      "gt_count": 7806,
+      "gt_mean": 0.16130779046256896,
+      "ks_pvalue": 3.2871991644982167e-07,
+      "ks_statistic": 0.0872782625732845,
+      "mean_delta_gen_minus_gt": 0.0006610549747426142,
+      "wasserstein": 0.0014304674307976262
+    },
+    "person2_grf_negative_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.20629314085642414,
+      "gt_count": 7806,
+      "gt_mean": 0.21275893153360634,
+      "ks_pvalue": 6.3258769914200355e-15,
+      "ks_statistic": 0.12757155129538364,
+      "mean_delta_gen_minus_gt": -0.006465790677182198,
+      "wasserstein": 0.008408493908862618
+    },
+    "person2_mean_torque_bw": {
+      "gen_count": 1173,
+      "gen_mean": 0.252153149161307,
+      "gt_count": 7806,
+      "gt_mean": 0.25925935011474516,
+      "ks_pvalue": 5.432727547953644e-65,
+      "ks_statistic": 0.26788168062733564,
+      "mean_delta_gen_minus_gt": -0.007106200953438169,
+      "wasserstein": 0.007112030743512112
+    },
+    "person2_mean_vertical_grf": {
+      "gen_count": 1173,
+      "gen_mean": 12.322397745488347,
+      "gt_count": 7806,
+      "gt_mean": 13.14837401894168,
+      "ks_pvalue": 4.487905069405635e-17,
+      "ks_statistic": 0.13667891378721725,
+      "mean_delta_gen_minus_gt": -0.8259762734533336,
+      "wasserstein": 0.9444103932127816
+    },
+    "person2_peak_vertical_grf": {
+      "gen_count": 1173,
+      "gen_mean": 93.8551123948353,
+      "gt_count": 7806,
+      "gt_mean": 99.11339975930521,
+      "ks_pvalue": 1.0051655581698976e-18,
+      "ks_statistic": 0.1432732903340797,
+      "mean_delta_gen_minus_gt": -5.258287364469908,
+      "wasserstein": 5.890704105042455
+    },
+    "person2_torque_95th": {
+      "gen_count": 1173,
+      "gen_mean": 368.1600436399835,
+      "gt_count": 7806,
+      "gt_mean": 386.75207227066016,
+      "ks_pvalue": 2.268372875772013e-107,
+      "ks_statistic": 0.34313758254028476,
+      "mean_delta_gen_minus_gt": -18.59202863067668,
+      "wasserstein": 18.59439553737168
+    },
+    "person2_torque_smoothness": {
+      "gen_count": 1173,
+      "gen_mean": 73.53052603993274,
+      "gt_count": 7801,
+      "gt_mean": 86.43087831616121,
+      "ks_pvalue": 2.8193071254848802e-68,
+      "ks_statistic": 0.27452455709604195,
+      "mean_delta_gen_minus_gt": -12.900352276228475,
+      "wasserstein": 13.199210836397755
+    },
+    "person2_torque_violation_rate": {
+      "gen_count": 1173,
+      "gen_mean": 0.0,
+      "gt_count": 7806,
+      "gt_mean": 0.0,
+      "ks_pvalue": 1.0,
+      "ks_statistic": 0.0,
+      "mean_delta_gen_minus_gt": 0.0,
+      "wasserstein": 0.0
+    }
+  },
+  "gen_clip_count": 1173,
+  "gen_dir": "/media/rh/codes/sim/InterMask/data/imdy_metrics/generated_intergen_interhuman",
+  "gt_clip_count": 7806,
+  "gt_dir": "/media/rh/codes/sim/InterMask/data/imdy_metrics/gt_interhuman",
+  "timestamp_utc": "2026-04-01T19:30:50.570378+00:00"
+}

@@ -187,6 +187,42 @@ python prepare2/visualize_newton.py \
 
 ---
 
+## Step 6 — ImDy Physics Plausibility (conda: torchv2)
+
+ImDy inference needs a PyTorch environment with ImDy dependencies (`prepare5/ImDy`).
+
+```bash
+# Generated InterHuman from retargeted positions
+python eval_pipeline/imdy_scorer.py \
+    --data-dir data/retargeted_v2/generated_interhuman \
+    --dataset-type retargeted \
+    --output-dir data/imdy_metrics/generated_interhuman \
+    --imdy-config prepare5/ImDy/config/IDFD_mkr.yml \
+    --imdy-checkpoint prepare5/ImDy/downloaded_checkpoint/imdy_pretrain.pt \
+    --device cuda:0
+
+# GT InterHuman from retargeted positions
+python eval_pipeline/imdy_scorer.py \
+    --data-dir data/retargeted_v2/interhuman \
+    --dataset-type retargeted \
+    --output-dir data/imdy_metrics/gt_interhuman \
+    --imdy-config prepare5/ImDy/config/IDFD_mkr.yml \
+    --imdy-checkpoint prepare5/ImDy/downloaded_checkpoint/imdy_pretrain.pt \
+    --device cuda:1
+
+# Compare distributions
+python eval_pipeline/imdy_scorer.py --compare \
+    --gt-dir data/imdy_metrics/gt_interhuman \
+    --gen-dir data/imdy_metrics/generated_interhuman \
+    --output data/imdy_metrics/comparison_report.json
+```
+
+Per-clip output: `<clip_id>_imdy.json`  
+Dataset summary: `summary.json`  
+Comparison report: `comparison_report.json`
+
+---
+
 ## Output Summary Table
 
 | Dataset       | Case       | Retargeted | XMLs | Torques | Skyhook |
