@@ -2,10 +2,14 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# X11 / OpenGL display forwarding
-ENV DISPLAY=:0
+# X11 / OpenGL — DISPLAY is injected at runtime by run.sh via docker-compose
 ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV NVIDIA_DRIVER_CAPABILITIES=all
+
+# Force NVIDIA as the OpenGL/EGL/Vulkan provider
+ENV __GLX_VENDOR_LIBRARY_NAME=nvidia
+ENV __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+ENV VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json
 
 # Base dependencies + deadsnakes PPA for Python 3.8
 RUN apt-get update && apt-get install -y \
@@ -16,15 +20,24 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libssl-dev \
     libffi-dev \
-    # X11 and OpenGL libs for GUI forwarding
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libglu1-mesa \
+    gdb \
+    strace \
+    # X11 libs
     libx11-6 \
     libxext6 \
     libxrender1 \
     x11-utils \
     x11-apps \
+    mesa-utils \
+    # GLVND (GL vendor-neutral dispatch) — lets NVIDIA driver override mesa at runtime
+    libglvnd0 \
+    libglvnd-dev \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libgles2 \
+    # Keep mesa only as fallback for GLU (not as primary GL)
+    libglu1-mesa \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y \
     python3.8 \
@@ -60,6 +73,19 @@ RUN pip install -r PHC/requirement.txt
 
 # Install Isaac Gym (must be present at third_party/isaacgym/ before building)
 COPY third_party/isaacgym/python ./isaacgym_python
+
+# Copy Isaac Gym EGL/Vulkan JSON configs (required by libnvf.plugin.so for NvfDeviceCreate)
+RUN mkdir -p /usr/share/glvnd/egl_vendor.d /etc/vulkan/icd.d
+COPY third_party/isaacgym/docker/10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+COPY third_party/isaacgym/docker/nvidia_icd.json /etc/vulkan/icd.d/nvidia_icd.json
+
+# Fix Isaac Gym + NumPy 1.20+ incompatibility (np.float → float64)
+RUN sed -i 's/dtype=np\.float,/dtype=np.float64,/g' ./isaacgym_python/isaacgym/torch_utils.py && \
+    sed -i 's/dtype=np\.float)/dtype=np.float64)/g' ./isaacgym_python/isaacgym/torch_utils.py
+
 RUN pip install -e ./isaacgym_python
+
+# Add Isaac Gym bundled libs to LD_LIBRARY_PATH (libmem_filesys.so, libboost_*.so.1.68.0, etc.)
+ENV LD_LIBRARY_PATH="/workspace/isaacgym_python/isaacgym/_bindings/linux-x86_64:${LD_LIBRARY_PATH}"
 
 CMD ["/bin/bash"]

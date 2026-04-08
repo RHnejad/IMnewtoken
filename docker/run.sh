@@ -15,7 +15,8 @@ rsync -a --delete \
     --exclude='myvenv/' \
     --exclude='__pycache__/' \
     --exclude='*.pyc' \
-    --exclude='data/' \
+    --exclude='/data/' \
+    --exclude='InterHuman_dataset/' \
     "$NFS_REPO/" "$LOCAL_REPO/"
 
 export REPO_PATH="$LOCAL_REPO"
