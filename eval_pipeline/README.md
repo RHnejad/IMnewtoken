@@ -187,9 +187,10 @@ python prepare2/visualize_newton.py \
 
 ---
 
-## Step 6 — ImDy Physics Plausibility (conda: torchv2)
+## Step 6 — ImDy Physics Plausibility (conda: intermask)
 
-ImDy inference needs a PyTorch environment with ImDy dependencies (`prepare5/ImDy`).
+ImDy inference needs a PyTorch environment with the ImDy dependencies in `prepare5/ImDy`.
+In this repo, the validated environment is `intermask`.
 
 ```bash
 # Generated InterHuman from retargeted positions
@@ -220,6 +221,128 @@ python eval_pipeline/imdy_scorer.py --compare \
 Per-clip output: `<clip_id>_imdy.json`  
 Dataset summary: `summary.json`  
 Comparison report: `comparison_report.json`
+
+---
+
+## Step 7 — InterX Force × Mesh Contact Analysis (conda: intermask)
+
+This stage aligns per-frame ImDy predictions with precomputed InterX mesh-contact JSONs and is
+implemented in `eval_pipeline/force_contact_analysis.py`.
+
+Scope:
+- InterX only
+- retargeted clips in `data/retargeted_v2/interx`
+- mesh-contact JSONs in `output/mesh_contact/interx`
+
+Public subcommands:
+- `infer` — save one `.npz` + one `.meta.json` per clip
+- `visualize` — save one `*_force_contact.png` per clip
+- `analyze` — save one dataset-level JSON with per-clip paired statistics
+- `aggregate` — save `action_summary.json` plus action-level plots
+
+Contact policy:
+- binary contact: `touching` or `penetrating`
+- `barely_touching` is kept separate for visualization shading only
+- out-of-range ImDy frame indices are dropped during alignment; they are never zero-filled
+
+Joint labeling:
+- torque heatmaps and ranked joint gaps use the 23-joint ImDy torque layout from
+  `prepare5/ImDy/models/utils.py:JOINT_NAMES[:23]`
+- the final joint in this layout is `jaw`, not `L_Hand`
+
+### 7.1 Infer force arrays
+
+```bash
+python eval_pipeline/force_contact_analysis.py infer \
+    --output-dir output/force_contact/interx_arrays \
+    --device cpu \
+    --batch-size 256 \
+    --sample-per-action 20 \
+    --seed 42
+```
+
+Defaults already target the InterX paths:
+- `--data-dir data/retargeted_v2/interx`
+- `--contact-dir output/mesh_contact/interx`
+- `--imdy-config prepare5/ImDy/config/IDFD_mkr.yml`
+- `--imdy-checkpoint prepare5/ImDy/downloaded_checkpoint/imdy_pretrain.pt`
+
+Per-clip outputs:
+- `<clip>.npz`
+  - `torque_p0`, `torque_p1` with shape `(N, 23, 3)`
+  - `grf_p0`, `grf_p1` with shape `(N, 2, 24, 3)`
+  - `contact_logits_p0`, `contact_logits_p1` with shape `(N, 2, 24, 1)`
+  - `frame_indices`
+- `<clip>.meta.json`
+  - clip ID, action class, preprocessing settings, config/checkpoint paths, seed, exact saved shapes
+- `_infer_summary.json`
+
+### 7.2 Visualize force-contact overlays
+
+```bash
+python eval_pipeline/force_contact_analysis.py visualize \
+    --arrays-dir output/force_contact/interx_arrays \
+    --output-dir output/force_contact/interx_plots \
+    --clip-ids G005T000A000R002,G035T000A002R013
+```
+
+Each plot contains:
+- mean torque magnitude for both people
+- vertical GRF for both people
+- mesh min distance
+- contact vertex count
+- torque heatmap for person 0
+- torque heatmap for person 1
+
+Shading:
+- red = touching/penetrating
+- orange = barely touching
+
+### 7.3 Analyze contact vs non-contact phases
+
+```bash
+python eval_pipeline/force_contact_analysis.py analyze \
+    --arrays-dir output/force_contact/interx_arrays \
+    --output output/force_contact/interx_analysis/analysis_results.json
+```
+
+The saved JSON contains:
+- `dataset_stats`
+- `joint_gap_ranked`
+- `per_clip`
+- `processing_summary`
+
+Statistics are computed on clip-level paired summaries, not raw frames, to avoid frame-level pseudo-replication.
+Clips without enough contact and non-contact frames are skipped and counted in `processing_summary`.
+
+### 7.4 Aggregate by action category
+
+```bash
+python eval_pipeline/force_contact_analysis.py aggregate \
+    --analysis-results output/force_contact/interx_analysis/analysis_results.json \
+    --output-dir output/force_contact/interx_aggregate
+```
+
+Outputs:
+- `action_summary.json`
+- `torque_gap_by_action.png`
+- `contact_rate_vs_torque_gap.png`
+
+### 7.5 Validated smoke test
+
+Validated locally on April 8, 2026 with:
+- `infer` on 5 InterX clips
+- `visualize` on:
+  - `G005T000A000R002` (clear contact)
+  - `G035T000A002R013` (no contact)
+- `analyze` on the smoke outputs
+- `aggregate` on the smoke analysis JSON
+
+Smoke outputs were written under:
+- `output/force_contact/interx_smoke/arrays`
+- `output/force_contact/interx_smoke/plots`
+- `output/force_contact/interx_smoke/analysis`
+- `output/force_contact/interx_smoke/aggregate`
 
 ---
 

@@ -33,6 +33,7 @@ if PROJECT_ROOT not in sys.path:
 
 from data.body_model.body_model import BodyModel  # noqa: E402
 from prepare_mesh_contact.mesh_contact_pipeline import (  # noqa: E402
+    _override_interhuman_betas_from_root,
     ContactConfig,
     MeshContactAnalyzer,
     load_interhuman_clip,
@@ -199,7 +200,15 @@ class MeshContactNewtonVis:
 
         if args.dataset == "interhuman":
             persons = load_interhuman_clip(args.data_root, args.clip)
+            if args.betas_from_interhuman_root is not None:
+                persons, _ = _override_interhuman_betas_from_root(
+                    persons=persons,
+                    clip_id=args.clip,
+                    gt_interhuman_root=args.betas_from_interhuman_root,
+                )
         else:
+            if args.betas_from_interhuman_root is not None:
+                raise ValueError("--betas-from-interhuman-root is only supported with --dataset interhuman")
             persons = load_interx_clip(
                 args.data_root,
                 args.clip,
@@ -508,6 +517,12 @@ def parse_args():
     parser.add_argument("--data-root", type=str, default=None)
     parser.add_argument("--h5-file", type=str, default=None, help="InterX optional explicit H5 file")
     parser.add_argument(
+        "--betas-from-interhuman-root",
+        type=str,
+        default=None,
+        help="InterHuman only: replace clip betas with matching GT InterHuman betas from this root",
+    )
+    parser.add_argument(
         "--body-model-path",
         type=str,
         default=os.path.join(PROJECT_ROOT, "data", "body_model", "smplx", "SMPLX_NEUTRAL.npz"),
@@ -529,7 +544,7 @@ def parse_args():
     parser.add_argument("--self-penetration-threshold-m", type=float, default=0.004)
     parser.add_argument("--self-penetration-k", type=int, default=12)
     parser.add_argument("--self-penetration-normal-dot-max", type=float, default=-0.2)
-    parser.add_argument("--max-inside-queries", type=int, default=64)
+    parser.add_argument("--max-inside-queries", type=int, default=256)
     parser.add_argument("--max-points-per-set", type=int, default=300)
 
     parser.add_argument("--radius-pen", type=float, default=0.020)

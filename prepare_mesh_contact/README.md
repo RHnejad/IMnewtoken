@@ -137,6 +137,59 @@ InterX loader supports both layouts:
 - `processed/motions/inter-x.h5` (single-file layout)
 - `processed/motions/train.h5`, `val.h5`, `test.h5` (split layout)
 
+Headless diagnostic renders:
+
+```bash
+python prepare_mesh_contact/render_contact_headless.py \
+  --batch interhuman \
+  --frames-per-clip 1 \
+  --frame-policy representative \
+  --out-dir output/renders/interhuman_sample
+```
+
+Useful render-only flags:
+
+- `--frame-policy {first,middle,representative}` chooses which diagnostic frame to show
+- `--show-caption` overlays InterHuman / InterX text in the info panel
+- `--betas-from-interhuman-root` lets generated InterHuman clips borrow GT betas during mesh reconstruction
+
+Single-clip headless render:
+
+```bash
+python prepare_mesh_contact/render_contact_headless.py \
+  --dataset interx \
+  --clip G039T007A025R000 \
+  --data-root data/Inter-X_Dataset \
+  --body-model-path data/body_model/smplx/SMPLX_NEUTRAL.npz \
+  --frames-per-clip 2 \
+  --frame-policy representative \
+  --out-dir output/renders/interx_G039T007A025R000
+```
+
+Batch helpers:
+
+```bash
+prepare_mesh_contact/smoke_test.sh
+JOBS=8 prepare_mesh_contact/run_interhuman_batch.sh
+JOBS=16 prepare_mesh_contact/run_interx_batch.sh
+prepare_mesh_contact/check_progress.sh interx
+prepare_mesh_contact/monitor.sh interx
+prepare_mesh_contact/retry_failed.sh interx
+```
+
+Generated-vs-GT InterHuman helpers:
+
+```bash
+GENERATED_ROOT=/path/to/generated_smplx_interhuman \
+prepare_mesh_contact/run_interhuman_generated_vs_gt.sh
+```
+
+Important:
+
+- The generated-vs-GT helpers require a generated InterHuman root whose `.pkl` clips already contain SMPL-X parameters: `trans`, `root_orient`, `pose_body` (betas optional).
+- `data/generated_intergen/interhuman/*.pkl` in this repo is **not** directly compatible with `mesh_contact_pipeline.py`; those files store features/positions rather than SMPL-X pose parameters.
+- The implementation report for this workflow lives under `documentations/`, not inside `prepare_mesh_contact/`.
+
 ## Important arguments
 
 - `--touching-threshold-m` (default `0.005`)
@@ -147,6 +200,8 @@ InterX loader supports both layouts:
 - `--self-penetration-threshold-m` (default `0.004`)
 - `--self-penetration-k` (default `12`)
 - `--self-penetration-normal-dot-max` (default `-0.2`)
+- `--max-inside-queries` (default `256`)
+- `--betas-from-interhuman-root` (InterHuman only, optional GT-beta override)
 - `--frame-start`, `--frame-end`, `--frame-step`
 
 Tune thresholds based on your mesh resolution and downstream tolerance.
