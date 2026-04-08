@@ -137,6 +137,70 @@ InterX loader supports both layouts:
 - `processed/motions/inter-x.h5` (single-file layout)
 - `processed/motions/train.h5`, `val.h5`, `test.h5` (split layout)
 
+Headless diagnostic renders:
+
+```bash
+python prepare_mesh_contact/render_contact_headless.py \
+  --batch interhuman \
+  --frames-per-clip 1 \
+  --frame-policy representative \
+  --out-dir output/renders/interhuman_sample
+```
+
+Useful render-only flags:
+
+- `--frame-policy {first,middle,representative}` chooses which diagnostic frame to show when you render a subset
+- `--show-caption` overlays InterHuman annotation text in the info panel
+- `--caption-lines 3` shows the first 3 non-empty annotation lines
+- `--compare-processed-skeleton` adds an InterHuman-only 22-joint debug subplot next to the mesh
+
+Notes:
+
+- InterHuman captions are enabled by default for InterHuman renders if annotation files are present.
+- `representative` ranks frames by contact severity (`penetrating` > `touching` > `barely_touching` > `not_touching`), then by smallest `min_distance_m`, then by earliest frame.
+- The processed-skeleton debug view is meant for pose diagnosis only; it does not imply that InterHuman `motions_processed` rot6d is interchangeable with raw SMPL-X `pose_body`.
+
+Generated-vs-GT InterHuman comparison:
+
+```bash
+bash prepare_mesh_contact/run_interhuman_generated_vs_gt.sh \
+  --workers 4 \
+  --device cuda \
+  --batch-size 64
+```
+
+This orchestration flow will:
+
+- top up missing official GT train/test JSONs
+- extract contact JSONs for InterMask-generated InterHuman clips using GT betas
+- render GT-vs-generated side-by-side PNGs for generated clips with inter-person penetration
+- write CSV/Markdown reports to `output/reports/interhuman_generated_vs_gt`
+
+Useful generated-vs-GT subcommands:
+
+```bash
+python prepare_mesh_contact/render_interhuman_generated_vs_gt.py \
+  --clips 26 \
+  --generated-data-root /mnt/vita/scratch/vita-staff/users/rh/codes/2026/default_intermask/data/generated/interhuman \
+  --generated-json-dir output/mesh_contact/generated_interhuman \
+  --out-dir output/renders/interhuman_gt_vs_generated_contact
+```
+
+```bash
+python prepare_mesh_contact/summarize_interhuman_generated_vs_gt.py \
+  --gt-json-dir output/mesh_contact/interhuman \
+  --generated-json-dir output/mesh_contact/generated_interhuman \
+  --comparison-dir output/renders/interhuman_gt_vs_generated_contact \
+  --out-dir output/reports/interhuman_generated_vs_gt
+```
+
+Generated InterHuman notes:
+
+- `mesh_contact_pipeline.py` accepts `--betas-from-interhuman-root PATH` to replace generated clip betas with the matching GT InterHuman betas before reconstruction.
+- `run_interhuman_batch.sh` accepts `--data-root`, `--output-dir`, and `--betas-from-interhuman-root`, and can discover either GT clips from `motions/*.pkl` or generated clips from root-level `*.pkl`.
+- Zero-frame InterHuman PKLs are now written as explicit zero-frame JSON summaries instead of failing the batch. This matters for official split clips `3945` and `4106`.
+- The generated-vs-GT summary expects one shared threshold configuration and `self_penetration_mode=off`; it fails loudly if those assumptions are violated.
+
 ## Important arguments
 
 - `--touching-threshold-m` (default `0.005`)
