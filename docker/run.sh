@@ -19,6 +19,22 @@ rsync -a --delete \
     --exclude='InterHuman_dataset/' \
     "$NFS_REPO/" "$LOCAL_REPO/"
 
+# Sync InterHuman dataset (follows NFS symlink → local copy, skips large zips)
+# Uses --no-delete so existing motions aren't re-copied on every run
+DATASET_SRC="$(realpath "$NFS_REPO/InterHuman_dataset")"
+DATASET_DST="$LOCAL_REPO/InterHuman_dataset"
+if [ -d "$DATASET_SRC" ]; then
+    echo "[*] Syncing InterHuman dataset: $DATASET_SRC → $DATASET_DST"
+    # Replace symlink (if present) with a real directory so rsync writes locally
+    [ -L "$DATASET_DST" ] && rm "$DATASET_DST"
+    mkdir -p "$DATASET_DST"
+    rsync -a \
+        --exclude='*.zip' \
+        "$DATASET_SRC/" "$DATASET_DST/"
+else
+    echo "[warn] InterHuman dataset not found at $DATASET_SRC, skipping"
+fi
+
 export REPO_PATH="$LOCAL_REPO"
 
 # X11 auth setup
