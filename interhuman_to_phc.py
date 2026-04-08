@@ -7,7 +7,7 @@ InterHuman motion .pkl layout (one file, two persons):
         trans        (T, 3)   float32  root translation in meters, Z-up (mocap world frame)
         root_orient  (T, 3)   float32  root orientation axis-angle
         pose_body    (T, 63)  float32  21 body joints × 3 axis-angle (SMPL body, no hands)
-        betas        (10,)    float32  SMPL shape parameters
+        betas        (5,)     float32  SMPL shape parameters
         gender       str      'neutral'
     mocap_framerate  float    59.94
     frames           int      T
@@ -83,13 +83,13 @@ _SMPL_TO_MUJOCO = [SMPL_BONE_ORDER_NAMES.index(j) for j in SMPL_MUJOCO_NAMES]
 def build_skeleton_tree(smpl_data_dir: str, betas: np.ndarray, gender: str = "neutral") -> SkeletonTree:
     """
     Build a subject-specific SMPL SkeletonTree using real betas.
-    upright_start=False → matches smpl_humanoid.yaml in PHC.
+    upright_start=True → matches smpl_humanoid.yaml in PHC (has_upright_start: True).
     """
     gender_id = {"neutral": 0, "male": 1, "female": 2}.get(gender, 0)
     robot_cfg = {
         "mesh": False,
         "rel_joint_lm": False,
-        "upright_start": False,
+        "upright_start": True,
         "remove_toe": False,
         "real_weight": True,
         "real_weight_porpotion_capsules": True,
@@ -108,8 +108,15 @@ def build_skeleton_tree(smpl_data_dir: str, betas: np.ndarray, gender: str = "ne
         "sim": "isaacgym",
     }
     robot = LocalRobot(robot_cfg, data_dir=smpl_data_dir)
+    # PHC's SMPL model has 5 shape components; truncate InterHuman's 10 betas.
+    # PHC's smpl_local_robot expects 16 betas for the SMPL model (gender_beta[1:] pattern
+    # used in humanoid.py:748), then internally truncates to 10.  InterHuman has 10 betas,
+    # so we zero-pad to 16 to trigger the expected code path.
+    betas_16 = np.zeros(16, dtype=np.float32)
+    n = min(len(betas), 16)
+    betas_16[:n] = betas[:n]
     robot.load_from_skeleton(
-        betas=torch.tensor(betas, dtype=torch.float32).unsqueeze(0),
+        betas=torch.tensor(betas_16, dtype=torch.float32).unsqueeze(0),
         objs_info=None,
         gender=[gender_id],
     )
@@ -131,9 +138,14 @@ def convert_person(person: dict, smpl_data_dir: str, fps: int) -> dict:
     Convert one InterHuman person dict to a PHC motion entry.
 
     Coordinate system note:
-        InterHuman stores mocap data in Z-up world frame.
-        No Rx(+90°) needed (unlike raw SMPL Y-up from fitting).
-        The trans values (-1..+1 m) and root_orient are already Z-up.
+        InterHuman root_orient is the rotation from SMPL canonical (Y-up) to the
+        Z-up MoCap world frame.  PHC's smpl_humanoid uses upright_start=True, so
+        its simulation skeleton already has the Y-up→Z-up correction baked in.
+        We must therefore apply the same correction to pose_quat_global that
+        convert_amass_isaac.py applies:
+            pose_quat_global *= sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
+        This removes the 120°@(1,1,1) rotation (= SMPL canonical → Z-up upright)
+        from all global joint orientations, making them relative to Z-up canonical.
     """
     trans      = person["trans"].astype(np.float64)       # (T, 3)  Z-up, meters
     root_aa    = person["root_orient"].astype(np.float64)  # (T, 3)
@@ -177,14 +189,39 @@ def convert_person(person: dict, smpl_data_dir: str, fps: int) -> dict:
         root_trans_offset.float(),
         is_local=True,
     )
-    pose_quat_global = sk_state.global_rotation.numpy().astype(np.float64)
+    pose_quat_global = sk_state.global_rotation.numpy()  # (T, J, 4)
+
+    # Apply upright_start correction — same as convert_amass_isaac.py:
+    #   pose_quat_global *= sRot([0.5,0.5,0.5,0.5]).inv()
+    # This removes the SMPL-canonical→Z-up rotation baked into the raw global quats.
+    R_correction_inv = sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
+    pose_quat_global = (
+        sRot.from_quat(pose_quat_global.reshape(-1, 4)) * R_correction_inv
+    ).as_quat().reshape(T, _N_SMPL_JOINTS, 4).astype(np.float64)
+
+    # Re-derive local quaternions from the corrected global rotations
+    sk_state_corrected = SkeletonState.from_rotation_and_root_translation(
+        sk_tree,
+        torch.from_numpy(pose_quat_global).float(),
+        root_trans_offset.float(),
+        is_local=False,
+    )
+    pose_quat_local = sk_state_corrected.local_rotation.numpy().astype(np.float64)
+
+    # pose_aa must be in SMPL anatomical order (flat T×72) — matches convert_amass_isaac.py.
+    # fix_trans_height in MotionLibSMPL passes this directly to the SMPL mesh parser which
+    # expects SMPL anatomical joint order.  InterHuman body_aa is already in that order
+    # (joints 1-21), root_aa is Pelvis (joint 0), hands (22-23) are zero-padded.
+    pose_aa_smpl = np.concatenate(
+        [root_aa, body_aa, np.zeros((T, 6))], axis=1
+    )  # (T, 72) SMPL anatomical order
 
     return {
         "pose_quat_global":  pose_quat_global,
-        "pose_quat":         pose_quat_local.astype(np.float64),
+        "pose_quat":         pose_quat_local,
         "trans_orig":        trans,
         "root_trans_offset": root_trans_offset,
-        "pose_aa":           pose_aa_mj.reshape(T, -1),
+        "pose_aa":           pose_aa_smpl,
         "beta":              betas,
         "gender":            np.str_(gender),
         "fps":               fps,
@@ -264,13 +301,24 @@ def main():
     rel_out = os.path.relpath(os.path.abspath(args.out), _PHC)
     n_envs  = len(motion_dict)
     print(f"""
-PHC command (da PHC/ directory):
+PHC commands (from PHC/ directory):
 
+  # Keypoint PNN (simpler, no shape conditioning):
   python phc/run_hydra.py \\
-      learning=im_pnn_big exp_name=phc_pnn env=env_im_pnn \\
-      robot=smpl_humanoid \\
+      learning=im_pnn exp_name=phc_kp_pnn_iccv \\
+      epoch=-1 test=True \\
+      env=env_im_pnn \\
+      robot.freeze_hand=True robot.box_body=False env.obs_v=7 \\
+      env.motion_file={rel_out} env.num_prim=4 \\
+      env.num_envs={n_envs} headless=False
+
+  # Shape PNN (uses subject betas):
+  python phc/run_hydra.py \\
+      learning=im_pnn exp_name=phc_shape_pnn_iccv \\
+      epoch=-1 test=True \\
+      env=env_im_pnn \\
+      robot=smpl_humanoid_shape robot.freeze_hand=True robot.box_body=False \\
       env.motion_file={rel_out} \\
-      env.training_prim=0 epoch=-1 test=True \\
       env.num_envs={n_envs} headless=False
 """)
 
