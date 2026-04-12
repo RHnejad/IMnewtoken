@@ -1,6 +1,4 @@
 
-*.json
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,7 +6,6 @@ __pycache__/
 out/
 # C extensions
 *.so
-*.pkl
 *.mp4
 
 # Distribution / packaging

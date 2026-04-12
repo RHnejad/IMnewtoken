@@ -1,0 +1,331 @@
+diff --git a/prepare_mesh_contact/README.md b/prepare_mesh_contact/README.md
+index 340e5b0..f0fde08 100644
+--- a/prepare_mesh_contact/README.md
++++ b/prepare_mesh_contact/README.md
+@@ -137,6 +137,70 @@ InterX loader supports both layouts:
+ - `processed/motions/inter-x.h5` (single-file layout)
+ - `processed/motions/train.h5`, `val.h5`, `test.h5` (split layout)
+ 
++Headless diagnostic renders:
++
++```bash
++python prepare_mesh_contact/render_contact_headless.py \
++  --batch interhuman \
++  --frames-per-clip 1 \
++  --frame-policy representative \
++  --out-dir output/renders/interhuman_sample
++```
++
++Useful render-only flags:
++
++- `--frame-policy {first,middle,representative}` chooses which diagnostic frame to show when you render a subset
++- `--show-caption` overlays InterHuman annotation text in the info panel
++- `--caption-lines 3` shows the first 3 non-empty annotation lines
++- `--compare-processed-skeleton` adds an InterHuman-only 22-joint debug subplot next to the mesh
++
++Notes:
++
++- InterHuman captions are enabled by default for InterHuman renders if annotation files are present.
++- `representative` ranks frames by contact severity (`penetrating` > `touching` > `barely_touching` > `not_touching`), then by smallest `min_distance_m`, then by earliest frame.
++- The processed-skeleton debug view is meant for pose diagnosis only; it does not imply that InterHuman `motions_processed` rot6d is interchangeable with raw SMPL-X `pose_body`.
++
++Generated-vs-GT InterHuman comparison:
++
++```bash
++bash prepare_mesh_contact/run_interhuman_generated_vs_gt.sh \
++  --workers 4 \
++  --device cuda \
++  --batch-size 64
++```
++
++This orchestration flow will:
++
++- top up missing official GT train/test JSONs
++- extract contact JSONs for InterMask-generated InterHuman clips using GT betas
++- render GT-vs-generated side-by-side PNGs for generated clips with inter-person penetration
++- write CSV/Markdown reports to `output/reports/interhuman_generated_vs_gt`
++
++Useful generated-vs-GT subcommands:
++
++```bash
++python prepare_mesh_contact/render_interhuman_generated_vs_gt.py \
++  --clips 26 \
++  --generated-data-root /mnt/vita/scratch/vita-staff/users/rh/codes/2026/default_intermask/data/generated/interhuman \
++  --generated-json-dir output/mesh_contact/generated_interhuman \
++  --out-dir output/renders/interhuman_gt_vs_generated_contact
++```
++
++```bash
++python prepare_mesh_contact/summarize_interhuman_generated_vs_gt.py \
++  --gt-json-dir output/mesh_contact/interhuman \
++  --generated-json-dir output/mesh_contact/generated_interhuman \
++  --comparison-dir output/renders/interhuman_gt_vs_generated_contact \
++  --out-dir output/reports/interhuman_generated_vs_gt
++```
++
++Generated InterHuman notes:
++
++- `mesh_contact_pipeline.py` accepts `--betas-from-interhuman-root PATH` to replace generated clip betas with the matching GT InterHuman betas before reconstruction.
++- `run_interhuman_batch.sh` accepts `--data-root`, `--output-dir`, and `--betas-from-interhuman-root`, and can discover either GT clips from `motions/*.pkl` or generated clips from root-level `*.pkl`.
++- Zero-frame InterHuman PKLs are now written as explicit zero-frame JSON summaries instead of failing the batch. This matters for official split clips `3945` and `4106`.
++- The generated-vs-GT summary expects one shared threshold configuration and `self_penetration_mode=off`; it fails loudly if those assumptions are violated.
++
+ ## Important arguments
+ 
+ - `--touching-threshold-m` (default `0.005`)
+diff --git a/prepare_mesh_contact/mesh_contact_pipeline.py b/prepare_mesh_contact/mesh_contact_pipeline.py
+index bdda5c4..aa88549 100644
+--- a/prepare_mesh_contact/mesh_contact_pipeline.py
++++ b/prepare_mesh_contact/mesh_contact_pipeline.py
+@@ -42,6 +42,9 @@ if PROJECT_ROOT not in sys.path:
+     sys.path.insert(0, PROJECT_ROOT)
+ 
+ 
++CKDTREE_WORKERS = int(os.environ.get("CKDTREE_WORKERS", "-1"))
++
++
+ @dataclass
+ class ContactConfig:
+     touching_threshold_m: float = 0.005
+@@ -52,7 +55,7 @@ class ContactConfig:
+     self_penetration_threshold_m: float = 0.004
+     self_penetration_k: int = 12
+     self_penetration_normal_dot_max: float = -0.2
+-    max_inside_queries_per_mesh: int = 64
++    max_inside_queries_per_mesh: int = 256
+     ray_eps: float = 1e-8
+ 
+ 
+@@ -144,7 +147,8 @@ def load_interhuman_clip(data_root: str, clip_id: str) -> List[Dict[str, np.ndar
+         if pose_body.shape != (t_len, 63):
+             raise ValueError(f"{key} pose_body shape mismatch: {pose_body.shape}")
+ 
+-        betas = _normalize_betas(p["betas"], t_len=t_len, n_betas=10)
++        raw_betas = p.get("betas", np.zeros(10, dtype=np.float32))
++        betas = _normalize_betas(raw_betas, t_len=t_len, n_betas=10)
+         pose_hand = _extract_pose_hand(p, t_len=t_len)
+ 
+         persons.append(
+@@ -165,6 +169,50 @@ def load_interhuman_clip(data_root: str, clip_id: str) -> List[Dict[str, np.ndar
+     return persons
+ 
+ 
++def _override_interhuman_betas_from_root(
++    persons: Sequence[Dict[str, np.ndarray]],
++    clip_id: str,
++    gt_interhuman_root: str,
++) -> Tuple[List[Dict[str, np.ndarray]], Dict[str, object]]:
++    """Replace InterHuman person betas with the matching GT clip betas."""
++    gt_persons = load_interhuman_clip(gt_interhuman_root, clip_id)
++    if len(gt_persons) < len(persons):
++        raise ValueError(
++            f"GT InterHuman clip '{clip_id}' has fewer persons ({len(gt_persons)}) than source clip ({len(persons)})"
++        )
++
++    gt_by_name = {str(person["name"]): person for person in gt_persons}
++    overridden: List[Dict[str, np.ndarray]] = []
++    matched_people: List[str] = []
++    for person in persons:
++        person_name = str(person["name"])
++        if person_name not in gt_by_name:
++            raise KeyError(
++                f"GT InterHuman clip '{clip_id}' is missing matching person '{person_name}' for beta override"
++            )
++
++        gt_betas = np.asarray(gt_by_name[person_name]["betas"], dtype=np.float32)
++        replaced = dict(person)
++        replaced["betas"] = gt_betas.copy()
++        overridden.append(replaced)
++        matched_people.append(person_name)
++
++    return overridden, {
++        "enabled": True,
++        "interhuman_root": gt_interhuman_root,
++        "matched_people": matched_people,
++    }
++
++
++def _infer_interhuman_source_variant(data_root: str, betas_override_root: Optional[str]) -> str:
++    if betas_override_root:
++        return "intermask_generated"
++    motions_dir = os.path.join(data_root, "motions")
++    if os.path.isdir(motions_dir):
++        return "gt"
++    return "intermask_generated"
++
++
+ def _interx_h5_candidates(data_root: str, explicit_h5: Optional[str]) -> List[str]:
+     if explicit_h5 is not None:
+         if os.path.isfile(explicit_h5):
+@@ -304,6 +352,8 @@ def reconstruct_smplx_mesh_sequence(
+         betas_np = np.asarray(person["betas"], dtype=np.float32)
+ 
+         t_len = trans_np.shape[0]
++        if t_len == 0:
++            raise ValueError(f"{person['name']}: clip has 0 frames")
+         if root_np.shape != (t_len, 3) or pose_body_np.shape != (t_len, 63):
+             raise ValueError(
+                 f"{person['name']} tensor shapes mismatch: "
+@@ -390,7 +440,7 @@ class MeshContactAnalyzer:
+ 
+         k = max(2, int(cfg.self_penetration_k) + 1)  # +1 includes self in cKDTree query
+         tree = cKDTree(vertices)
+-        dists, nn_idx = tree.query(vertices, k=k, workers=-1)
++        dists, nn_idx = tree.query(vertices, k=k, workers=CKDTREE_WORKERS)
+         dists = np.asarray(dists, dtype=np.float32)
+         nn_idx = np.asarray(nn_idx, dtype=np.int32)
+         normals = self._compute_vertex_normals(vertices).astype(np.float32)
+@@ -459,8 +509,8 @@ class MeshContactAnalyzer:
+         tree1 = cKDTree(v1)
+         tree2 = cKDTree(v2)
+ 
+-        d12, idx12 = tree2.query(v1, k=1, workers=-1)
+-        d21, idx21 = tree1.query(v2, k=1, workers=-1)
++        d12, idx12 = tree2.query(v1, k=1, workers=CKDTREE_WORKERS)
++        d21, idx21 = tree1.query(v2, k=1, workers=CKDTREE_WORKERS)
+ 
+         d12 = d12.astype(np.float32)
+         d21 = d21.astype(np.float32)
+@@ -849,6 +899,12 @@ def parse_args() -> argparse.Namespace:
+     p.add_argument("--clip", type=str, default=None, help="Clip ID (required unless --self-test)")
+     p.add_argument("--data-root", type=str, default=None, help="Dataset root path")
+     p.add_argument("--h5-file", type=str, default=None, help="InterX optional explicit H5 path")
++    p.add_argument(
++        "--betas-from-interhuman-root",
++        type=str,
++        default=None,
++        help="InterHuman only: replace clip betas with matching GT InterHuman betas from this root",
++    )
+     p.add_argument(
+         "--body-model-path",
+         type=str,
+@@ -876,7 +932,7 @@ def parse_args() -> argparse.Namespace:
+     p.add_argument("--self-penetration-threshold-m", type=float, default=0.004)
+     p.add_argument("--self-penetration-k", type=int, default=12)
+     p.add_argument("--self-penetration-normal-dot-max", type=float, default=-0.2)
+-    p.add_argument("--max-inside-queries", type=int, default=64)
++    p.add_argument("--max-inside-queries", type=int, default=256)
+ 
+     p.add_argument("--convert-interx-to-zup", action="store_true", default=True)
+     p.add_argument("--no-convert-interx-to-zup", dest="convert_interx_to_zup", action="store_false")
+@@ -920,30 +976,42 @@ def main() -> None:
+         print(f"Clip: {args.clip}")
+         print(f"Data root: {args.data_root}")
+ 
++    provenance: Dict[str, object] = {}
+     if args.dataset == "interhuman":
+         persons = load_interhuman_clip(args.data_root, args.clip)
++        source_variant = _infer_interhuman_source_variant(args.data_root, args.betas_from_interhuman_root)
++        beta_override_info: Dict[str, object] = {
++            "enabled": False,
++            "interhuman_root": None,
++            "matched_people": [],
++        }
++        if args.betas_from_interhuman_root is not None:
++            persons, beta_override_info = _override_interhuman_betas_from_root(
++                persons=persons,
++                clip_id=args.clip,
++                gt_interhuman_root=args.betas_from_interhuman_root,
++            )
++        provenance = {
++            "source_variant": source_variant,
++            "betas_override": beta_override_info,
++        }
+     else:
++        if args.betas_from_interhuman_root is not None:
++            raise ValueError("--betas-from-interhuman-root is only supported with --dataset interhuman")
+         persons = load_interx_clip(
+             args.data_root,
+             args.clip,
+             h5_file=args.h5_file,
+             convert_to_zup=args.convert_interx_to_zup,
+         )
+-
+-    v1, v2, faces = reconstruct_smplx_mesh_sequence(
+-        persons,
+-        body_model_path=args.body_model_path,
+-        device=args.device,
+-        batch_size=args.batch_size,
+-    )
+-
+-    t_len = min(v1.shape[0], v2.shape[0])
+-    frame_start = max(0, args.frame_start)
+-    frame_end = t_len if args.frame_end is None else min(t_len, args.frame_end)
+-    if frame_start >= frame_end:
+-        raise ValueError(f"Invalid frame range: [{frame_start}, {frame_end})")
+-
+-    frame_indices = np.arange(frame_start, frame_end, max(1, args.frame_step), dtype=np.int32)
++        provenance = {
++            "source_variant": "gt",
++            "betas_override": {
++                "enabled": False,
++                "interhuman_root": None,
++                "matched_people": [],
++            },
++        }
+ 
+     cfg = ContactConfig(
+         touching_threshold_m=args.touching_threshold_m,
+@@ -968,15 +1036,45 @@ def main() -> None:
+             f"self_pen={cfg.self_penetration_threshold_m:.4f}m, "
+             f"self_dot<={cfg.self_penetration_normal_dot_max:.2f}"
+         )
+-        print(f"Analyzing {len(frame_indices)} frames...")
+-
+-    analyzer = MeshContactAnalyzer(faces=faces, config=cfg)
+-    frame_summaries, frame_details = analyzer.analyze(
+-        vertices_p1=v1,
+-        vertices_p2=v2,
+-        frame_indices=frame_indices,
+-        verbose_every=0 if args.quiet else 50,
+-    )
++    source_t_len = min(int(np.asarray(person["trans"]).shape[0]) for person in persons[:2])
++    frame_start = max(0, args.frame_start)
++    frame_end = source_t_len if args.frame_end is None else min(source_t_len, args.frame_end)
++
++    if source_t_len == 0:
++        frame_start = 0
++        frame_end = 0
++        if args.export_ply_frame is not None:
++            raise ValueError("Cannot export a PLY frame for a zero-frame clip")
++        frame_indices = np.zeros((0,), dtype=np.int32)
++        frame_details = []
++        frame_summaries = []
++        faces = np.zeros((0, 3), dtype=np.int32)
++        if not args.quiet:
++            print("Clip has 0 frames; writing an explicit zero-frame summary JSON.")
++    else:
++        v1, v2, faces = reconstruct_smplx_mesh_sequence(
++            persons,
++            body_model_path=args.body_model_path,
++            device=args.device,
++            batch_size=args.batch_size,
++        )
++
++        t_len = min(v1.shape[0], v2.shape[0])
++        frame_end = t_len if args.frame_end is None else min(t_len, args.frame_end)
++        if frame_start >= frame_end:
++            raise ValueError(f"Invalid frame range: [{frame_start}, {frame_end})")
++
++        frame_indices = np.arange(frame_start, frame_end, max(1, args.frame_step), dtype=np.int32)
++        if not args.quiet:
++            print(f"Analyzing {len(frame_indices)} frames...")
++
++        analyzer = MeshContactAnalyzer(faces=faces, config=cfg)
++        frame_summaries, frame_details = analyzer.analyze(
++            vertices_p1=v1,
++            vertices_p2=v2,
++            frame_indices=frame_indices,
++            verbose_every=0 if args.quiet else 50,
++        )
+ 
+     output_base = os.path.join(PROJECT_ROOT, "output", "mesh_contact")
+     os.makedirs(output_base, exist_ok=True)
+@@ -989,6 +1087,7 @@ def main() -> None:
+         "dataset": args.dataset,
+         "clip": args.clip,
+         "data_root": args.data_root,
++        "provenance": provenance,
+         "body_model_path": args.body_model_path,
+         "device": args.device,
+         "frame_range": {

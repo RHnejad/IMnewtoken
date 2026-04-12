@@ -361,6 +361,50 @@ imgui.ini
 !nvidia_ecosystem_relevance_*.md
 !prompts.txt
 !documentations/
+
+# Project-specific ignores
+/output/
+/outputs/
+/output_/
+/logs/
+/checkpoints/
+/data/
+!/data/interhuman.py
+!/data/interx.py
+!/data/interx_preprocess.py
+!/data/interx_utils.py
+!/data/quaternion.py
+!/data/rotation_conversions.py
+!/data/utils.py
+!/data/body_model/
+!/data/Inter-X_Dataset/
+!/data/InterHuman/
+
+# Ignore all prepare directories' data and output, but not the code
+/prepare*/output/
+/prepare*/outputs/
+/prepare*/data/
+/prepare*/checkpoints/
+
+# VSCode
+.vscode/
+
+# User-specific
+imgui.ini
+*.tex
+*.pdf
+*.md
+!README.md
+!LICENSE
+!NEWTON_VQVAE_DOC.md
+!VQ-VAE_Codebook_Finetuning_Explanation.md
+!Codebook_Size_Configuration.md
+!CHECKPOINT_LOADING_FIX_SUMMARY.md
+!agent_handoff_*.md
+!supervisor_meeting_*.md
+!nvidia_ecosystem_relevance_*.md
+!prompts.txt
+!documentations/
 #   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
 #poetry.lock
 
