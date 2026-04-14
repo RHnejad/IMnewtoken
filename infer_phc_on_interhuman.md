@@ -123,9 +123,28 @@ Key overrides:
 | `env.num_envs` | = number of persons in pkl | 2 for both persons, 1 for single |
 | `headless=False` | — | show Isaac Gym viewer window |
 | `headless=True` | — | no window, faster (for torque extraction) |
+| `env.enableEarlyTermination=False` | — | keep episode running even if humanoid falls |
 
 > **Note:** `env.motion_file` paths are relative to the `PHC/` directory.
 > The converted pkl is at `PHC/output/interhuman/10_phc.pkl`, so pass `output/interhuman/10_phc.pkl`.
+
+### Disabling early termination (for falling motions)
+
+By default PHC resets an episode when any rigid body deviates more than 0.5 m from the reference
+(`terminationDistance`). Some InterHuman motions contain intentional falls — add
+`env.enableEarlyTermination=False` to let them play out fully:
+
+```bash
+python phc/run_hydra.py \
+    learning=im_pnn exp_name=phc_kp_pnn_iccv \
+    epoch=-1 test=True \
+    env=env_im_pnn \
+    robot.freeze_hand=True robot.box_body=False env.obs_v=7 \
+    env.motion_file=output/interhuman/10_phc.pkl \
+    env.num_prim=4 \
+    env.num_envs=2 headless=False \
+    env.enableEarlyTermination=False
+```
 
 ### Alternative: shape-conditioned model
 
