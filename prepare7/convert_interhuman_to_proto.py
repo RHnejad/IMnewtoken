@@ -97,12 +97,27 @@ def convert_person_to_motion(
 ):
     """Convert a single person's SMPL-X body params to ProtoMotions .motion format.
 
-    InterHuman .pkl data has root_orient and trans in Z-up coordinates.
-    The ProtoMotions MJCF body model also uses Z-up body-local offsets.
-    We feed the InterHuman data directly into the standard AMASS conversion
-    pipeline (including rot1), which produces correctly Z-up output because
-    InterHuman's root_orient already encodes the Z-up world orientation.
-    No coordinate undo is needed.
+    Uses a two-pass approach to satisfy two independent requirements simultaneously:
+
+    Pass 1 — Z-up body positions (for correct physics placement in Isaac Gym):
+      InterHuman data is already Z-up, so `trans` and the raw body rotations are used
+      directly.  This gives `rigid_body_pos` and `rigid_body_vel` in Z-up space, which
+      the position tracking reward (compute_gt_rew) and height observations need.
+
+    Pass 2 — Training DOF convention (to match what the policy was trained on):
+      The ProtoMotions AMASS training pipeline undoes the AMASS Y-up convention by
+      applying rot1 = R_xyz(-90°, -90°, 0) to every global joint quaternion.  InterHuman
+      data has an extra R_x(+90°) applied on top of AMASS.  To recover the identical
+      DOF values the policy expects, we first undo the R_x(+90°) pre-rotation (bringing
+      `trans` and `root_orient` back to Y-up AMASS convention), then run the exact same
+      rot1 pipeline.  This produces `dof_pos`, `dof_vel`, `rigid_body_rot`, and
+      `local_rigid_body_rot` in training convention, which the rotation reward
+      (compute_gr_rew) and policy observations require.
+
+    The final motion combines Z-up positions from Pass 1 with training-convention
+    orientations/DOFs from Pass 2.  The two are reconciled in `extract_qpos_from_transforms`
+    by using the Z-up `trans` (for correct character height in Isaac Gym) with the
+    training-convention local rotations (for correct joint angles).
     """
     # Downsample to target FPS
     largest_divisor = closest_divisor_larger_than_target(mocap_fr, output_fps)
@@ -119,92 +134,139 @@ def convert_person_to_motion(
     if T < 2:
         return None, current_fps
 
-    # ── Standard AMASS → ProtoMotions pipeline (matches convert_amass_to_proto.py) ──
-    # InterHuman Z-up root_orient + trans work directly with this pipeline because
-    # the MJCF body model has Z-up offsets and rot1 preserves the Z-up convention.
+    n_j = 23  # SMPL: 24 bodies - 1 root
 
-    # Construct SMPL 24-joint pose: root(3) + body(63) + hand_zeros(6) = 72
-    pose_aa = np.concatenate(
+    # ═══════════════════════════════════════════════════════════════════════
+    # PASS 1 — Z-up body positions and linear velocities
+    # ═══════════════════════════════════════════════════════════════════════
+    # Use InterHuman Z-up trans and raw body rotations directly; no coordinate
+    # transformation needed because InterHuman is already Z-up.
+    pose_aa_zup = np.concatenate(
         [root_orient, pose_body, np.zeros((T, 6))], axis=1
     )  # (T, 72)
-
-    # Reorder from SMPL bone order to MuJoCo order
-    pose_aa_mj = pose_aa.reshape(T, 24, 3)[:, smpl_2_mujoco]  # (T, 24, 3)
-
-    # Axis-angle → quaternion (scipy outputs xyzw) → rotation matrices
-    pose_quat = (
-        sRot.from_rotvec(pose_aa_mj.reshape(-1, 3))
+    pose_aa_mj_zup = pose_aa_zup.reshape(T, 24, 3)[:, smpl_2_mujoco]  # (T, 24, 3)
+    pose_quat_zup = (
+        sRot.from_rotvec(pose_aa_mj_zup.reshape(-1, 3))
         .as_quat()
         .reshape(T, 24, 4)
     )
 
-    amass_trans = torch.from_numpy(trans).to(device, dtype)
-    pose_quat = torch.from_numpy(pose_quat).to(device, dtype)
-    local_rot_mats = quaternion_to_matrix(pose_quat, w_last=True)
+    trans_inter = torch.from_numpy(trans).to(device, dtype)            # (T, 3) Z-up
+    pose_quat_zup_t = torch.from_numpy(pose_quat_zup).to(device, dtype)
+    local_rot_mats_zup = quaternion_to_matrix(pose_quat_zup_t, w_last=True)
 
-    # FK → world rotations
-    _, world_rot_mat = compute_forward_kinematics_from_transforms(
-        kinematic_info, amass_trans, local_rot_mats
+    motion_zup = fk_from_transforms_with_velocities(
+        kinematic_info=kinematic_info,
+        root_pos=trans_inter,
+        joint_rot_mats=local_rot_mats_zup,
+        fps=current_fps,
+        compute_velocities=True,
+        velocity_max_horizon=3,
     )
-    global_quat = matrix_to_quaternion(world_rot_mat, w_last=True)
 
-    # Apply rot1: standard body-frame alignment rotation
+    # ═══════════════════════════════════════════════════════════════════════
+    # PASS 2 — Training-convention rotations and DOFs (undo R_x90, then rot1)
+    # ═══════════════════════════════════════════════════════════════════════
+    # Undo InterHuman Z-up pre-rotation → recover AMASS Y-up convention.
+    # body_pose is body-local and requires no adjustment.
+    R_x_neg90 = sRot.from_euler("x", -np.pi / 2, degrees=False).as_matrix()  # (3,3)
+
+    trans_yup = np.einsum("ij,tj->ti", R_x_neg90, trans)              # (T,3) Y-up
+
+    root_orient_mats = sRot.from_rotvec(root_orient).as_matrix()      # (T,3,3)
+    root_orient_yup = sRot.from_matrix(
+        np.einsum("ij,tjk->tik", R_x_neg90, root_orient_mats)
+    ).as_rotvec()                                                      # (T,3) Y-up
+
+    # Standard AMASS pipeline: build pose, reorder joints, axis-angle → quat → mat
+    pose_aa_yup = np.concatenate(
+        [root_orient_yup, pose_body, np.zeros((T, 6))], axis=1
+    )  # (T, 72)
+    pose_aa_mj_yup = pose_aa_yup.reshape(T, 24, 3)[:, smpl_2_mujoco]
+    pose_quat_yup = (
+        sRot.from_rotvec(pose_aa_mj_yup.reshape(-1, 3))
+        .as_quat()
+        .reshape(T, 24, 4)
+    )
+
+    trans_yup_t = torch.from_numpy(trans_yup).to(device, dtype)
+    pose_quat_yup_t = torch.from_numpy(pose_quat_yup).to(device, dtype)
+    local_rot_mats_yup = quaternion_to_matrix(pose_quat_yup_t, w_last=True)
+
+    # FK → Y-up world rotations
+    _, world_rot_mat_yup = compute_forward_kinematics_from_transforms(
+        kinematic_info, trans_yup_t, local_rot_mats_yup
+    )
+    global_quat_yup = matrix_to_quaternion(world_rot_mat_yup, w_last=True)
+
+    # Apply rot1 — converts Y-up global quats to the MJCF/training convention.
     rot1 = sRot.from_euler("xyz", np.array([-np.pi / 2, -np.pi / 2, 0]), degrees=False)
     rot1_quat = (
         torch.from_numpy(rot1.as_quat())
         .to(device, dtype)
         .expand(T, -1)
     )
-    n_j = 23  # SMPL: 24 bodies - 1 root
-    for i in range(0, n_j + 1):
-        global_quat[:, i, :] = quat_mul(global_quat[:, i, :], rot1_quat, w_last=True)
+    for i in range(n_j + 1):
+        global_quat_yup[:, i, :] = quat_mul(global_quat_yup[:, i, :], rot1_quat, w_last=True)
 
-    # Recompute local rotations from rotated global rotations
+    # Re-derive local rotations in training DOF convention
     local_rot_mats_rotated = compute_joint_rot_mats_from_global_mats(
         kinematic_info=kinematic_info,
-        global_rot_mats=quaternion_to_matrix(global_quat, w_last=True),
+        global_rot_mats=quaternion_to_matrix(global_quat_yup, w_last=True),
     )
 
-    # FK with velocities → RobotState
-    motion = fk_from_transforms_with_velocities(
+    # FK with training-convention local rotations (uses Y-up trans only so we can
+    # extract the training-convention rigid_body_rot and rigid_body_ang_vel).
+    motion_train = fk_from_transforms_with_velocities(
         kinematic_info=kinematic_info,
-        root_pos=amass_trans,
+        root_pos=trans_yup_t,
         joint_rot_mats=local_rot_mats_rotated,
         fps=current_fps,
         compute_velocities=True,
         velocity_max_horizon=3,
     )
 
-    # Store local quaternions for MotionLib interpolation
+    # ═══════════════════════════════════════════════════════════════════════
+    # COMBINE: Z-up positions + training-convention rotations/DOFs
+    # ═══════════════════════════════════════════════════════════════════════
+    # Start from motion_zup (has correct Z-up rigid_body_pos and rigid_body_vel)
+    motion = motion_zup
+
+    # Override rotations and angular velocities with training-convention values
+    motion.rigid_body_rot = motion_train.rigid_body_rot.clone()
+    if motion_train.rigid_body_ang_vel is not None:
+        motion.rigid_body_ang_vel = motion_train.rigid_body_ang_vel.clone()
+
+    # Store local quaternions for MotionLib interpolation (training convention)
     motion.local_rigid_body_rot = matrix_to_quaternion(
         local_rot_mats_rotated, w_last=True
     ).clone()
 
-    # DOF positions (exp_map, skip root 7 DOFs)
+    # DOF positions: use Z-up trans for root placement, training-convention joints
     qpos = extract_qpos_from_transforms(
         kinematic_info=kinematic_info,
-        root_pos=amass_trans,
-        joint_rot_mats=local_rot_mats_rotated,
+        root_pos=trans_inter,           # Z-up: places character at correct height
+        joint_rot_mats=local_rot_mats_rotated,  # training convention joint angles
         multi_dof_decomposition_method="exp_map",
     )
     motion.dof_pos = qpos[:, 7:]
 
-    # DOF velocities
+    # DOF velocities (training-convention local rotations)
     local_angular_vels = compute_angular_velocity(
         batched_robot_rot_mats=local_rot_mats_rotated[:, 1:, :, :],
         fps=current_fps,
     )
     motion.dof_vel = local_angular_vels.reshape(-1, n_j * 3)
 
-    # Fix height so minimum body sits at ground + offset
+    # Fix height so minimum body sits at ground + offset (uses Z-up rigid_body_pos)
     motion.fix_height(height_offset=FOOT_HEIGHT_OFFSET)
 
     # Contact labels
     motion.rigid_body_contacts = compute_contact_labels_from_pos_and_vel(
         positions=motion.rigid_body_pos,
         velocity=motion.rigid_body_vel,
-        vel_thres=0.15,
-        height_thresh=0.1,
+        vel_thres=1.0,     # 0.15 was too tight for fast InterHuman motions (dance, fight)
+        height_thresh=0.3,  # generous threshold; after fix_height some feet sit just above 0.1
     ).to(torch.bool)
 
     return motion, current_fps

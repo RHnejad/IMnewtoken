@@ -20,12 +20,10 @@ rsync -a --delete \
     "$NFS_REPO/" "$LOCAL_REPO/"
 
 # Sync InterHuman dataset (follows NFS symlink → local copy, skips large zips)
-# Uses --no-delete so existing motions aren't re-copied on every run
 DATASET_SRC="$(realpath "$NFS_REPO/InterHuman_dataset")"
 DATASET_DST="$LOCAL_REPO/InterHuman_dataset"
 if [ -d "$DATASET_SRC" ]; then
     echo "[*] Syncing InterHuman dataset: $DATASET_SRC → $DATASET_DST"
-    # Replace symlink (if present) with a real directory so rsync writes locally
     [ -L "$DATASET_DST" ] && rm "$DATASET_DST"
     mkdir -p "$DATASET_DST"
     rsync -a \
@@ -33,33 +31,6 @@ if [ -d "$DATASET_SRC" ]; then
         "$DATASET_SRC/" "$DATASET_DST/"
 else
     echo "[warn] InterHuman dataset not found at $DATASET_SRC, skipping"
-fi
-
-# Sync generated motions (InterMask/InterGen predictions for PHC retargeting)
-GENERATED_SRC="$(realpath "$NFS_REPO/data/generated" 2>/dev/null || true)"
-GENERATED_DST="$LOCAL_REPO/data/generated"
-if [ -d "$GENERATED_SRC" ]; then
-    echo "[*] Syncing generated motions: $GENERATED_SRC → $GENERATED_DST"
-    [ -L "$GENERATED_DST" ] && rm "$GENERATED_DST"
-    mkdir -p "$GENERATED_DST"
-    rsync -a "$GENERATED_SRC/" "$GENERATED_DST/"
-else
-    echo "[warn] Generated motions not found at $NFS_REPO/data/generated, skipping"
-fi
-
-# Sync InterX ground-truth motions (follow the motions/ symlink to its real path)
-INTERX_MOTIONS_SRC="$(realpath "$NFS_REPO/data/InterX/motions" 2>/dev/null || true)"
-INTERX_MOTIONS_DST="$LOCAL_REPO/data/InterX/motions"
-if [ -d "$INTERX_MOTIONS_SRC" ]; then
-    echo "[*] Syncing InterX motions: $INTERX_MOTIONS_SRC → $INTERX_MOTIONS_DST"
-    [ -L "$INTERX_MOTIONS_DST" ] && rm "$INTERX_MOTIONS_DST"
-    mkdir -p "$INTERX_MOTIONS_DST"
-    rsync -a "$INTERX_MOTIONS_SRC/" "$INTERX_MOTIONS_DST/"
-    # Copy split files (small, no symlink)
-    mkdir -p "$LOCAL_REPO/data/InterX/splits"
-    rsync -a "$NFS_REPO/data/InterX/splits/" "$LOCAL_REPO/data/InterX/splits/"
-else
-    echo "[warn] InterX motions not found at $NFS_REPO/data/InterX/motions, skipping"
 fi
 
 export REPO_PATH="$LOCAL_REPO"
@@ -84,12 +55,12 @@ echo "[*] Running as UID=$HOST_UID GID=$HOST_GID"
 # --no-gpu → run without GPU (when nvidia-container-toolkit is missing)
 # (default) → run with GPU
 if [[ "$1" == "build" ]]; then
-    echo "[*] Building image"
-    docker compose -f "$SCRIPT_DIR/docker-compose.yml" build
+    echo "[*] Building ProtoMotion image"
+    docker compose -f "$SCRIPT_DIR/docker-compose.protomotion.yml" build
 elif [[ "$1" == "--no-gpu" ]]; then
-    echo "[*] GPU disabled (using docker-compose.nogpu.yml)"
-    docker compose -f "$SCRIPT_DIR/docker-compose.nogpu.yml" run --rm phc bash
+    echo "[*] GPU disabled"
+    docker compose -f "$SCRIPT_DIR/docker-compose.protomotion.yml" run --rm protomotion bash
 else
     echo "[*] GPU enabled"
-    docker compose -f "$SCRIPT_DIR/docker-compose.yml" run --rm phc bash
+    docker compose -f "$SCRIPT_DIR/docker-compose.protomotion.yml" run --rm protomotion bash
 fi

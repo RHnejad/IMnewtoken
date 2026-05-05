@@ -1,8 +1,11 @@
 # Ignore dataset symlinks
 interHuman/
 InterHuman_dataset
+data/generated/
+data/InterX/motions/
 PHC/
 third_party/
+.claude/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -147,6 +147,8 @@ def compute_contact_match_rew(
     Returns:
         Contact mismatch penalty tensor [num_envs].
     """
+    if ref_contacts is None:
+        return torch.zeros(sim_contacts.shape[0], device=sim_contacts.device, dtype=torch.float32)
     sim_contacts_subset = sim_contacts[:, contact_body_ids]
     ref_contacts_subset = ref_contacts[:, contact_body_ids]
     return torch.abs(sim_contacts_subset.float() - ref_contacts_subset.float()).sum(dim=1)
